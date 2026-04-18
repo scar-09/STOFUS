@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Intentional Pause</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #070b16;
+            color: #f8fafc;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── Main Container ───────────────────── */
+        .main-container {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 600px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ── Header ───────────────────── */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #22d3ee;
+            margin: 0 0 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+            font-weight: 700;
+        }
+
+        .header .site-name {
+            font-size: 1.3rem;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.6;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        /* ── Timer Section ─────────────────── */
+        .timer-section {
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 700;
+            color: #22d3ee;
+            text-shadow: 0 0 35px rgba(34, 211, 238, 0.7);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 6px;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        .timer-warning {
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.65);
+        }
+
+        /* ── Input Section ─────────────────── */
+        .input-section {
+            display: none;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto 32px;
+            text-align: center;
+        }
+
+        .input-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .required-phrase {
+            background: rgba(34, 211, 238, 0.08);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+
+        .required-phrase .phrase {
+            font-size: 1.1rem;
+            color: #22d3ee;
+            font-weight: 600;
+            font-style: italic;
+            margin: 0 0 8px;
+            line-height: 1.4;
+        }
+
+        .required-phrase .hint {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 28px;
+        }
+
+        .phrase-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 10px;
+            color: #f8fafc;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .phrase-input:focus {
+            outline: none;
+            border-color: #22d3ee;
+            background: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+        }
+
+        .phrase-input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        .input-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        /* ── Action Button ─────────────────── */
+        .unlock-btn {
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.6);
+            color: #22d3ee;
+            padding: 18px 36px;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .unlock-btn.active {
+            display: block;
+        }
+
+        .unlock-btn:hover:not(:disabled) {
+            background: rgba(34, 211, 238, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(34, 211, 238, 0.4);
+        }
+
+        .unlock-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Status Message ────────────────── */
+        .status-message {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1.6px;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
+        .status-message.warning {
+            color: #fbbf24;
+        }
+
+        .status-message.success {
+            color: #22d3ee;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>Intentional Pause</h1>
+            <div class="site-name" id="siteName">Loading...</div>
+            <p>Take a moment to consider if you really want to unlock this website.</p>
+        </div>
+
+        <div class="timer-section" id="timerSection">
+            <div class="timer-display" id="timerDisplay">45</div>
+            <div class="timer-label">Seconds remaining</div>
+        </div>
+
+        <div class="input-section" id="inputSection">
+            <div class="required-phrase">
+                <p class="phrase">"I choose to unlock this website"</p>
+                <p class="hint">Type this phrase exactly (case insensitive)</p>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" 
+                       class="phrase-input" 
+                       id="phraseInput" 
+                       placeholder="Type the required phrase here..."
+                       autocomplete="off"
+                       spellcheck="false">
+                <div class="input-error" id="inputError"></div>
+            </div>
+            
+            <button class="unlock-btn" id="unlockBtn">Unlock Website</button>
+        </div>
+
+        <div class="status-message" id="statusMessage">Please wait...</div>
+    </div>
+
+    <script src="bg-canvas.js" data-bg-mode="block"></script>
+    <script src="friction.js"></script>
+</body>
+
+</html>

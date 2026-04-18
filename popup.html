@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <!-- Persistent header -->
+  <div class="header">
+    <div class="header-brand-right">STOFUS</div>
+  </div>
+
+  <!-- Section 1: URL Blocker -->
+  <div class="accordion">
+    <input type="checkbox" name="acc" id="acc1">
+    <label for="acc1">
+      <span class="acc-label"><span class="acc-icon">🛡️</span> URL Blocker</span>
+    </label>
+    <div class="content">
+      <div class="input-group">
+        <label for="url">Website to block</label>
+        <input type="text" id="url" placeholder="e.g. twitter.com" autocomplete="off" spellcheck="false">
+        <span class="field-hint" id="urlError"></span>
+      </div>
+      <div class="input-group">
+        <label for="timer">Duration</label>
+        <div class="duration-input-row">
+          <input type="text" id="timer" maxlength="3" value="30" autocomplete="off" spellcheck="false">
+          <select id="durationUnit" class="duration-unit">
+            <option value="minutes" selected>Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days">Days</option>
+          </select>
+        </div>
+        <div class="duration-info">
+          <span class="scaling-notice">⚡ Unlock time scales with duration</span>
+        </div>
+        <span class="field-hint" id="timerError"></span>
+      </div>
+      <div class="btn-row">
+        <button id="blockBtn" class="btn-primary">Block site</button>
+        <button id="undoBtn" class="btn-undo hidden" title="Undo last block">↩ Undo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Content Filter -->
+  <div class="accordion">
+    <input type="checkbox" name="acc" id="acc2">
+    <label for="acc2">
+      <span class="acc-label"><span class="acc-icon">🔍</span> Content filter</span>
+    </label>
+    <div class="content">
+      <div class="input-group">
+        <label for="keyword">Block by keyword</label>
+        <div class="keyword-input-row">
+          <input type="text" id="keyword" placeholder="Enter keyword" autocomplete="off" spellcheck="false">
+          <button id="addKeywordBtn" class="btn-add">Add</button>
+        </div>
+        <span class="warning-label">Common words may block legitimate sites.</span>
+        <span class="field-hint" id="keywordError"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Status -->
+  <div class="accordion">
+    <input type="checkbox" name="acc" id="acc3">
+    <label for="acc3">
+      <span class="acc-label"><span class="acc-icon">📊</span> Status</span>
+    </label>
+    <div class="content list-content">
+      <div class="dashboard-cards">
+        <div class="metric-card glass" id="cardSites">
+          <div class="metric-value" id="countSites">0</div>
+          <div class="metric-label">Active sites</div>
+        </div>
+        <div class="metric-card glass" id="cardKeywords">
+          <div class="metric-value" id="countKeywords">0</div>
+          <div class="metric-label">Active Keywords</div>
+        </div>
+      </div>
+      
+      <!-- Behavior Metrics -->
+      <div class="stats-row" style="display: flex; gap: 8px; margin-bottom: 10px; justify-content: center;">
+        <div class="stat-box glass">
+           <div class="stat-val" id="statAttemptsBlocked">0</div>
+           <div class="stat-lbl">Attempts Blocked</div>
+        </div>
+      </div>
+      <div class="collapsible-list" id="listSitesContainer">
+        <h4 class="sub-title">Blocked sites</h4>
+        <ul id="blockedList"></ul>
+      </div>
+
+      <div class="collapsible-list" id="listKeywordsContainer">
+        <h4 class="sub-title">Active keywords</h4>
+        <ul id="keywordList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="status"></div>
+
+  <script src="bg-canvas.js" data-bg-mode="popup"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+{
+    "manifest_version": 3,
+    "name": "Stofus",
+    "version": "1.0",
+    "description": "Block distracting sites to stay focused.",
+    "permissions": [
+        "tabs",
+        "storage",
+        "alarms",
+        "webNavigation",
+        "history"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Stofus",
+        "default_icon": {
+            "16": "stofus16.png",
+            "48": "stofus48.png",
+            "128": "stofus128.png"
+        }
+    },
+    "icons": {
+        "16": "stofus16.png",
+        "48": "stofus48.png",
+        "128": "stofus128.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/*",
+                "bg-canvas.js",
+                "blocked.html",
+                "blocked.js",
+                "blocked.css",
+                "kw-blocked.html",
+                "kw-blocked.js",
+                "kw-blocked.css",
+                "friction.html",
+                "friction.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}

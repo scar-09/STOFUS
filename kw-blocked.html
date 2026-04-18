@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Keyword Blocked</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="kw-blocked.css">
+</head>
+
+<body>
+
+    <div id="bg-container">
+        <div id="bg-blur"></div>
+        <div id="bg-sharp"></div>
+    </div>
+    <div class="glass-card">
+        <h1>KEYWORD DETECTED</h1>
+        <div class="keyword-info">
+            Blocked keyword: <span id="matchedKeyword"></span>
+        </div>
+        
+        <p class="description">
+            This page contains content matching one of your restricted keywords.
+            Stay focused and avoid distractions!
+        </p>
+
+        <div class="action-row">
+            <button id="goBackBtn" class="btn-primary">Go Back</button>
+            <button id="closeBtn" class="btn-ghost">Close Tab</button>
+        </div>
+    </div>
+    
+    <!-- Keyword Bypass Button -->
+    <button id="unintentionalBtn" class="btn-bypass">Unintentional?</button>
+    
+    <!-- Confirmation Popup -->
+    <div id="confirmPopup" class="confirm-popup" style="display: none;">
+        <div class="confirm-popup-content">
+            <p id="confirmMessage">Did "<span id="blockedKeyword"></span>" come up on this page accidentally?</p>
+            <div class="confirm-buttons">
+                <button id="confirmYep" class="btn-primary">Yep</button>
+                <button id="confirmNah" class="btn-ghost">Nah, I'm good</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="bg-canvas.js" data-bg-mode="block"></script>
+    <script src="kw-blocked.js"></script>
+</body>
+
+</html>

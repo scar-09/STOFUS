@@ -1,0 +1,265 @@
+/* ═══════════════════════════════════════════════════
+   Stofus — Keyword Block Screen Styles
+   Dedicated for keyword matches only
+═══════════════════════════════════════════════════ */
+
+/* ── Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    color: #f8fafc;
+    background-color: #070b16;
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* ── Glass card ───────────────────────────────── */
+.glass-card {
+    background: rgba(6, 10, 22, 0.72);
+    backdrop-filter: blur(34px);
+    -webkit-backdrop-filter: blur(34px);
+    border: 1px solid rgba(34, 211, 238, 0.20);
+    border-radius: 22px;
+    padding: 52px 48px 44px;
+    max-width: 520px;
+    width: 90vw;
+    text-align: center;
+    box-shadow:
+        0 32px 64px -16px rgba(0, 0, 0, 0.80),
+        0 0 80px -24px rgba(34, 211, 238, 0.07);
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Heading ──────────────────────────────────── */
+h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #4ecde8;          /* slightly desaturated from pure cyan */
+    letter-spacing: 2.5px;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.28);
+}
+
+/* ── Keyword text ──────────────────────────────── */
+.keyword-info {
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #64748b;
+    margin-bottom: 24px;
+    padding: 0 12px;
+    line-height: 1.6;
+}
+
+.keyword-info span {
+    color: #22d3ee;
+    font-weight: 600;
+}
+
+/* ── Description ──────────────────────────────── */
+.description {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+/* ── Standardized Timer ───────────────────────── */
+.timer-display {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #f8fafc;
+    text-align: center;
+    letter-spacing: 2px;
+    min-width: 120px;
+    padding: 8px 16px;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    border-radius: 8px;
+    margin: 0 auto;
+    display: inline-block;
+}
+
+.timer-cooldown {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.3);
+    color: #fbbf24;
+}
+
+/* ── Action buttons ────────────────────────────── */
+.action-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: rgba(34, 211, 238, 0.12);
+    border: 1px solid rgba(34, 211, 238, 0.50);
+    color: #22d3ee;
+    padding: 13px 36px;
+    font-size: 0.88rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: rgba(34, 211, 238, 0.22);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.45);
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #64748b;
+    padding: 13px 24px;
+    font-size: 0.88rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+    border-color: #94a3b8;
+    color: #94a3b8;
+}
+
+/* ── Keyword Bypass Button ───────────────────── */
+.btn-bypass {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: #fbbf24;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10000;
+}
+
+.btn-bypass:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+}
+
+.btn-bypass:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(148, 163, 184, 0.1);
+    border-color: rgba(148, 163, 184, 0.2);
+    color: #64748b;
+}
+
+/* ── Confirmation Popup ───────────────────────────── */
+.confirm-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.confirm-popup-content {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 320px;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#confirmMessage {
+    color: #f8fafc;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+#blockedKeyword {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-buttons .btn-primary,
+.confirm-buttons .btn-ghost {
+    padding: 8px 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.confirm-buttons .btn-primary {
+    background: #22d3ee;
+    border: 1px solid #22d3ee;
+    color: #0f172a;
+}
+
+.confirm-buttons .btn-primary:hover {
+    background: #67e8f9;
+    border-color: #67e8f9;
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+
+.confirm-buttons .btn-ghost {
+    background: transparent;
+    border: 1px solid #64748b;
+    color: #94a3b8;
+}
+
+.confirm-buttons .btn-ghost:hover {
+    border-color: #94a3b8;
+    color: #94a3b8;
+}
+
+/* ── Legacy bg-container: hidden (canvas replaces) */
+#bg-container, #bg-blur, #bg-sharp { display: none; }

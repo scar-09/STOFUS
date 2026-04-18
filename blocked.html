@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Stofus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="blocked.css">
+</head>
+
+<body>
+
+    <div id="bg-container">
+        <div id="bg-blur"></div>
+        <div id="bg-sharp"></div>
+    </div>
+    <div class="glass-card">
+        <h1>BRO, PLEASE STOP.</h1>
+        <div class="timer-container">
+            <div id="countdown" class="countdown">--:--</div>
+            <div class="timer-label">REMAINING</div>
+        </div>
+
+        <div class="action-row" style="display: flex; gap: 12px; justify-content: center; margin-top: 10px;">
+            <button id="closeBtn" class="close-btn">Close Tab</button>
+        </div>
+    </div>
+
+    <button id="emergencyBtn" class="emergency-btn-corner">BYPASS</button>
+    
+    <!-- Confirmation Popup -->
+    <div id="emergencyConfirmPopup" class="confirm-popup" style="display: none;">
+        <div class="confirm-popup-content">
+            <p>This is a 2 minute bypass.</p>
+            <p class="confirm-note">Bypassing will put a 60 minutes cooldown on this feature globally.</p>
+            <div class="confirm-buttons">
+                <button id="emergencyConfirmYep" class="btn-primary">Yes, let me in</button>
+                <button id="emergencyConfirmNah" class="btn-ghost">Nah, I'm good</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="bg-canvas.js" data-bg-mode="block"></script>
+    <script src="blocked.js"></script>
+</body>
+
+</html>

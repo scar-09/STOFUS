@@ -1,0 +1,247 @@
+# Stofus - Change Logs
+
+## April 9, 2026 - Initial Development
+**Project Foundation & UI Refinement**
+- Created project foundation with "Project Info" documentation file
+- Implemented comprehensive UI refinement:
+  - Tightened padding throughout interface for cleaner appearance
+  - Removed accordion chevron indicators for simplified design
+  - Applied boxed styling to input groups for better visual hierarchy
+  - Darkened overall theme for improved contrast and readability
+
+**Feature Removal & Simplification**
+- Removed "Temporarily Disable Keywords" functionality:
+  - Eliminated feature allowing temporary keyword suspension
+  - Removed keyword chips from Content Filter section
+  - Moved keyword visibility to Dashboard section only
+- Removed "Session Intent" feature:
+  - Eliminated session declaration system from popup interface
+  - Removed all related code from popup and block screen implementations
+
+**Keyword Blocking System**
+- Enhanced keyword blocking capabilities:
+  - Implemented container-based content filtering with "Blur" and "Remove" modes
+  - Added "Reveal/Expand" options for filtered content
+  - Integrated whole-word matching for improved accuracy
+  - Created dedicated full-page block screen for title/URL keyword matches
+- Fixed keyword blocker behavior issues:
+  - Resolved unintended redirections for URL/Search keyword matches
+  - Ensured blocks only apply to specific content containers
+  - Added fallback logic to trigger block screen when page content becomes unusable
+- Implemented strict keyword blocking system:
+  - Removed all content filtering and blurring logic for performance
+  - Implemented strict regex matching with plural support (keyword matches keywords)
+  - Added URL and Title checking at document_start for immediate blocking
+  - Created dedicated kw-blocked.html screen with keyword-specific details
+
+**UI & Game Mechanics**
+- Compacted UI for cleaner interface:
+  - Set all accordion sections to closed state by default
+  - Removed redundant "Match whole words only" toggle from Content Filter
+- Refined Friction Game mechanics:
+  - Replaced random movement with predictable paths (linear, circular, figure-8)
+  - Implemented 5-second accumulated progress system with decay
+  - Added dynamic difficulty scaling based on user performance
+  - Integrated subtle magnetic assist for fairer gameplay experience
+
+**Emergency Unlock Feature**
+- Added Emergency Unlock feature:
+  - Implemented controlled, limited bypass system for blocked websites
+  - Created 2-minute unlock access per focus session
+  - Added 60-minute global cooldown period
+  - Integrated countdown overlay display during active unlock
+  - Implemented strict tab-level isolation for security
+
+## April 10, 2026 - Feature Refinements & Fixes
+**Emergency Unlock Improvements**
+- Fixed Emergency Unlock activation failures:
+  - Resolved issues preventing unlock activation
+  - Ensured valid tabId acquisition for proper functionality
+  - Implemented safe storage write operations
+  - Restricted unlock button appearance to active block screens only
+  - Prevented UI leakage to expired or reload screens
+- Refined Emergency Unlock bypass implementation:
+  - Moved bypass check to top of all blocking logic for instant access
+  - Relocated unlock button to subtle floating corner overlay
+  - Added force-reload functionality to immediately restore original site
+- Fixed Emergency Unlock functionality:
+  - Corrected unlock button behavior to redirect to original blocked website
+  - Resolved issue where button only reloaded blocked page
+  - Ensured website becomes accessible for full 2-minute duration
+- Fixed Emergency Unlock timing logic:
+  - Corrected cooldown to start after 2-minute unlock period expires
+  - Fixed issue where cooldown started immediately upon activation
+  - Restored cooldown duration to 60 minutes
+  - Ensured unlock timer overlay appears immediately when activated
+- Fixed Emergency Unlock overlay display:
+  - Added storage change listener to content script
+  - Ensured overlay appears immediately when unlock is activated
+  - Fixed overlay display on website redirect after unlock activation
+
+**Dashboard & Metrics Overhaul**
+- Refactored Dashboard to Status screen:
+  - Replaced "Today's Focus", "Blocks Today", and "Streak" metrics
+  - Added "Time Resisted", "Attempts Blocked", and "Focus Chain" metrics
+  - Implemented weekly visual strip with checkmark/cross/dot indicators
+  - Added micro metrics showing "Last break" and "Emergency used"
+  - Implemented tracking hooks for attempts blocked, emergency usage, and daily focus completion
+- Fixed Attempts Blocked counting accuracy:
+  - Implemented deduplication mechanism to prevent multiple counting
+  - Added prevention for counting same blocked attempt across different navigation events
+  - Covered webNavigation, history, and tabs.onUpdated events
+  - Removed incorrect counting from manual block site actions
+  - Ensured 1 attempt = 1 count accuracy
+
+**UI Cleanup & Bug Fixes**
+- Removed "Last break" metric from Status screen:
+  - Eliminated metric for cleaner UI layout
+  - Centered "Emergency used" metric for visual balance
+- Fixed JavaScript error in blocked.js:
+  - Resolved undefined 'disabled' variable causing extension errors
+  - Properly initialized variable to false before conditional usage
+
+**Time Resisted Tracking Evolution**
+- Fixed Time Resisted tracking accuracy:
+  - Added real-time tracking for currently active focus sessions
+  - Improved fallback handling for sites without durationMs
+  - Ensured accurate display of total resisted time including ongoing sessions
+- Replaced Time Resisted with focus session-based calculation:
+  - Changed from blocked site visits to actual focus session duration tracking
+  - Added focusSession state tracking with startTime and duration
+  - Implemented real-time elapsed time calculation for active sessions
+  - Added full duration display for completed sessions
+- Fixed focus session creation issue:
+  - Added direct focus session creation when blocking sites in popup.js
+  - Ensured proper initialization with correct startTime and duration
+  - Added debugging logs for session state tracking
+- Fixed Time Resisted persistence:
+  - Modified calculation to use stats_history focusTime for completed sessions
+  - Added active session time to total calculation
+  - Ensured correct display even after focus session ends
+  - Prevented reset to zero issue
+- Simplified Time Resisted calculation:
+  - Changed to show total duration of all blocked sites (active + completed)
+  - Implemented simple addition of all block durations regardless of session state
+  - Example: 20-minute block + 15-minute block = 35 minutes display
+- Removed Time Resisted metric completely:
+  - Eliminated problematic Time Resisted calculation and UI element
+  - Removed from Status screen due to persistent tracking issues
+  - Status screen now only shows Attempts Blocked and Focus Chain metrics
+
+**Keyword Bypass System**
+- Implemented keyword-filter bypass system:
+  - Added "Unintentional" button on keyword block screen
+  - Created 3-minute bypass for current tab/URL only
+  - Implemented 7-minute cooldown period
+  - Added precise timing with real-time UI updates
+  - Ensured strict tab-scoped bypass that doesn't persist across tabs
+- Fixed keyword bypass positioning and functionality:
+  - Moved "Unintentional" button to fixed top-right corner
+  - Matched emergency unlock button style for consistency
+  - Fixed page reload to redirect to original URL
+  - Ensured proper URL parameter passing for bypass functionality
+- Added movable bypass timer overlay:
+  - Created draggable timer capsule for 3-minute bypass period
+  - Implemented countdown display in "Bypass M:SS" format
+  - Added automatic page reload when bypass expires
+  - Supports both mouse and touch dragging for repositioning
+
+**Branding & Technical Updates**
+- Changed extension name from "Focus Blocker" to "Stofus":
+  - Updated manifest.json with new name
+  - Changed popup.html header branding
+  - Updated blocked.html title
+  - Modified CSS file comments to reflect new branding
+  - Maintained same UI font (Montserrat) and functionality
+- Fixed CSS lint warning:
+  - Added standard 'appearance' property for compatibility
+  - Resolved vendor prefix compatibility issues
+
+**Status Screen Simplification**
+- Removed bloated metrics from Status screen:
+  - Eliminated Focus Chain metric and calculation
+  - Removed weekly visual strip display
+  - Removed Emergency used micro metric
+  - Simplified UI to show only Attempts Blocked metric
+  - Cleaned up corresponding DOM references and unused helper functions
+
+**Testing & UX Enhancements**
+- Updated emergency unlock cooldown for testing:
+  - Reduced cooldown timer from 60 minutes to 1 minute
+  - Updated both activation logic and alarm handler
+  - Maintains same functionality with shorter testing period
+- Enhanced emergency unlock timer overlay:
+  - Made timer overlay draggable like keyword bypass timer
+  - Updated styling to match bypass timer appearance
+  - Added "Unlock" prefix to timer display for clarity
+  - Supports both mouse and touch dragging for repositioning
+
+## April 11, 2026 - Timer Display Fixes
+- Fixed emergency unlock timer display issue:
+  - Added storage change listener to show overlay immediately when unlock is activated
+  - Fixed timing issue where overlay required manual page refresh to appear
+  - Added 100ms delay in blocked.js before redirect to ensure storage update
+  - Timer now appears immediately when page reloads after emergency unlock activation
+
+## April 14, 2026 - Input Validation & Friction Game Removal
+**Duration Input Constraints**
+- Implemented strict input validation for duration fields:
+  - Minutes: Limited to 1-180 range (minimum 1, maximum 180)
+  - Hours: Limited to 1-72 range (minimum 1, maximum 72)
+  - Days: Limited to 1-30 range (minimum 1, maximum 30)
+- Enhanced input validation behavior:
+  - Completely blocked alphabetical character input (prevents "ABCD" entries)
+  - Implemented automatic value clamping when exceeding maximum limits
+  - Added real-time validation with immediate user feedback
+  - Enhanced error messages for limit violations
+- Improved validation logic:
+  - Values exceeding maximum automatically clamp to allowed limit
+  - Values below minimum automatically set to minimum (1)
+  - Non-numeric input is immediately rejected and cleared
+  - Block button validation properly enforces all constraints
+
+**Friction System Replacement**
+- Removed friction challenge game system:
+  - Deleted challenge.html and challenge.js files
+  - Removed all game mechanics and visual effects
+  - Cleaned up bg-canvas.js friction mode configuration
+- Implemented new intentional pause friction system:
+  - Created friction.html with 45-second countdown timer
+  - Added tab focus detection - timer resets if user switches/minimizes tab
+  - Implemented phrase input system requiring "I choose to unlock this website"
+  - Added case-insensitive validation with no copy-paste allowed
+  - Created 1.5-second delay before automatic tab closure and unblocking
+- Enhanced user experience design:
+  - Clean, focused interface with clear visual hierarchy
+  - Warning color changes in final 10 seconds of countdown
+  - Smooth animations and transitions for better flow
+  - Clear status messages and error feedback
+- Technical implementation:
+  - Added friction.js with tab visibility and focus tracking
+  - Updated manifest.json to include new friction files
+  - Modified popup.js to open friction screen instead of direct unblock
+  - Maintained extension security and storage integrity
+
+**Domain-Based Temporary Unlock System**
+- Implemented robust domain-scoped temporary unlock mechanism:
+  - 2-minute domain unlock applies to all pages of the same domain
+  - Navigation (back/forward/reload/new pages) preserves unlock state
+  - Timer based on absolute timestamp, not page lifecycle
+  - Automatic cleanup of expired domain unlocks
+- Enhanced content script with domain unlock checking:
+  - Added domain unlock validation before content filtering
+  - Created showDomainUnlockTimerOverlay() with draggable timer display
+  - Real-time storage monitoring for unlock state changes
+- Background script domain unlock enforcement:
+  - Domain unlock check in navigation blocking logic
+  - Periodic cleanup of expired unlocks (every 30 seconds)
+  - Proper domain extraction and matching (removes www./https://)
+- Storage structure and management:
+  - domainUnlocks object: { domain: { domain, unlockExpiresAt } }
+  - Automatic cleanup prevents storage bloat
+  - Cross-tab synchronization through storage events
+- User experience improvements:
+  - Timer overlay shows remaining unlock time on all domain pages
+  - Seamless navigation without unlock interruption
+  - Automatic re-blocking after 2-minute expiry
+  - Consistent visual feedback across domain pages

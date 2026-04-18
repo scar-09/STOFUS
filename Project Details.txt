@@ -1,0 +1,121 @@
+# Stofus - Project Details
+
+## Project Overview
+Stofus is a sophisticated Chrome browser extension designed to enhance productivity by blocking distracting websites and content. The extension operates as a digital discipline tool, allowing users to create focused work sessions by temporarily blocking access to time-wasting websites and filtering content based on specific keywords. With a modern, glass-morphism UI design and real-time monitoring capabilities, Stofus provides users with granular control over their digital environment.
+
+## Core Functionality
+
+### URL Blocker System
+- **Mechanism**: Users can block any website by entering its URL and setting a custom focus duration (1-3600 minutes)
+- **Implementation**: Uses Chrome's WebNavigation and Tabs APIs to intercept navigation requests and redirect blocked sites to a dedicated block screen
+- **Storage**: Blocked sites are stored in Chrome's local storage with expiry timestamps for automatic unblocking
+- **Real-time Updates**: Active blocks are displayed with live countdown timers showing remaining block time
+
+### Keyword-Based Content Filter
+- **Scope**: Blocks content based on keyword matches in page URLs and titles
+- **Matching Logic**: Uses strict regex patterns with plural support (e.g., "social" matches "social" and "socials")
+- **Detection**: Performs keyword matching at document_start for immediate blocking before page content loads
+- **Bypass System**: Includes "Unintentional" button for accidental keyword matches with 3-minute bypass and 7-minute cooldown
+
+### Emergency Unlock Feature
+- **Purpose**: Provides controlled bypass for legitimate emergency access to blocked sites
+- **Duration**: 2-minute access window with 60-minute global cooldown
+- **Security**: Tab-level isolation ensures bypass only applies to specific tab
+- **Visual Feedback**: Floating countdown overlay appears during active unlock period
+
+## Technical Architecture
+
+### Extension Framework
+- **Manifest Version**: Chrome Extension Manifest V3
+- **Service Worker**: Background script handles blocking logic, alarm management, and storage operations
+- **Content Scripts**: Injected at document_start to perform real-time keyword matching and blocking
+- **Cross-Communication**: Uses Chrome runtime messaging for tab identification and state synchronization
+
+### Data Management
+- **Primary Storage**: Chrome Storage API for persistent data across browser sessions
+- **Data Structures**:
+  - `blockedSites`: Array of objects containing URL, duration, and expiry timestamps
+  - `strictKeywords`: Array of keywords for content filtering
+  - `emergencyUnlock`: Object tracking unlock state, cooldown, and session information
+  - `keywordBypass`: Tab-specific bypass objects for keyword filter bypasses
+  - `stats_history`: Daily statistics tracking attempts and focus time
+
+### Security & Isolation
+- **Tab Scoping**: All bypass mechanisms are strictly scoped to individual tabs
+- **Session Isolation**: Bypass states do not persist across tabs or after tab closure
+- **Deduplication**: Prevents multiple counting of blocked attempts using time-based deduplication
+- **URL Validation**: Implements hostname normalization and validation for accurate blocking
+
+## User Interface Design
+
+### Popup Interface
+- **Layout**: Glass-morphism design with dynamic canvas background
+- **Typography**: Montserrat font family for modern, clean aesthetics
+- **Components**:
+  - Header with active block count and timer display
+  - Accordion-style sections for URL blocker and keyword filter
+  - Status screen showing attempts blocked metric
+  - Real-time lists of active blocks and keywords with countdown timers
+
+### Block Screens
+- **Site Block Screen**: Full-page overlay for blocked websites with emergency unlock option
+- **Keyword Block Screen**: Dedicated screen for keyword matches with unintentional bypass button
+- **Visual Design**: Consistent glass-morphism theme with blur effects and subtle animations
+
+### Interactive Elements
+- **Draggable Overlays**: Timer overlays can be repositioned by users during active bypass periods
+- **Real-time Updates**: All timers and metrics update every second for accurate feedback
+- **Responsive Design**: Adapts to different screen sizes and maintains functionality across devices
+
+## Advanced Features
+
+### Bypass Systems
+1. **Emergency Unlock**: For legitimate emergency access with strict cooldown
+2. **Keyword Bypass**: For accidental keyword matches with tab-scoped duration
+3. **Timer Overlays**: Visual countdown displays during active bypass periods
+
+### Statistical Tracking
+- **Attempts Blocked**: Counts actual blocked navigation attempts with deduplication
+- **Focus Sessions**: Tracks duration and completion of focus sessions
+- **Daily History**: Maintains historical data for productivity analysis
+
+### Alarm Management
+- **Chrome Alarms API**: Used for precise timing of block expirations and cooldown periods
+- **Background Processing**: Alarms trigger even when extension popup is closed
+- **Cleanup Systems**: Automatic cleanup of expired blocks and completed bypasses
+
+## Implementation Details
+
+### Blocking Logic Flow
+1. Navigation event triggers content script execution
+2. Emergency unlock check performed first for priority access
+3. Keyword bypass check for tab-specific content filtering
+4. URL blocking check against active blocked sites list
+5. Redirect to appropriate block screen if blocking conditions met
+
+### Storage Synchronization
+- **Real-time Updates**: Storage change listeners ensure UI updates across all open popups
+- **Conflict Resolution**: Implements proper handling of concurrent storage modifications
+- **Data Integrity**: Validation and sanitization of stored data structures
+
+### Performance Optimizations
+- **Efficient Matching**: Optimized regex patterns and early termination conditions
+- **Memory Management**: Proper cleanup of event listeners and timers
+- **Minimal Overhead**: Lightweight content script execution with minimal DOM manipulation
+
+## Browser Compatibility
+- **Chrome**: Full support with Manifest V3 compliance
+- **Storage**: Uses Chrome Storage API for cross-device synchronization
+- **APIs**: Implements modern Chrome extension APIs for future compatibility
+
+## Development Considerations
+- **Security**: Implements content security policies and safe coding practices
+- **Maintainability**: Modular code structure with clear separation of concerns
+- **Extensibility**: Designed architecture allows for easy feature additions and modifications
+- **User Experience**: Focuses on intuitive interface design and reliable functionality
+
+## Future Enhancement Opportunities
+- **Analytics Dashboard**: Enhanced statistical visualization and insights
+- **Custom Block Categories**: Grouping and categorization of blocked content
+- **Productivity Reports**: Detailed reports on focus patterns and improvements
+- **Integration Support**: Potential integration with productivity tools and calendars

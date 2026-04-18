@@ -1,0 +1,349 @@
+/* ═══════════════════════════════════════════════════
+   Stofus — Block / Reward Screen Styles
+═══════════════════════════════════════════════════ */
+
+/* ── Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    color: #f8fafc;
+    background-color: #070b16;
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* ── Glass card ───────────────────────────────── */
+.glass-card {
+    background: rgba(6, 10, 22, 0.72);
+    backdrop-filter: blur(34px);
+    -webkit-backdrop-filter: blur(34px);
+    border: 1px solid rgba(34, 211, 238, 0.20);
+    border-radius: 22px;
+    padding: 52px 48px 44px;
+    max-width: 520px;
+    width: 90vw;
+    text-align: center;
+    box-shadow:
+        0 32px 64px -16px rgba(0, 0, 0, 0.80),
+        0 0 80px -24px rgba(34, 211, 238, 0.07);
+    position: relative;
+    z-index: 1;
+    animation: cardBreathe 7s ease-in-out infinite;
+}
+
+/* Card idle breathing */
+@keyframes cardBreathe {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.006); }
+}
+
+/* ── Heading ──────────────────────────────────── */
+h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #4ecde8;          /* slightly desaturated from pure cyan */
+    letter-spacing: 2.5px;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.28);
+}
+
+/* ── Timer ────────────────────────────────────── */
+.timer-container {
+    margin: 28px 0 36px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.countdown {
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 4px;
+    line-height: 1;
+    text-shadow:
+        0 0 28px rgba(248, 250, 252, 0.60),
+        0 0 55px rgba(34, 211, 238, 0.20),
+        0 0 90px rgba(34, 211, 238, 0.08);
+    transition: color 0.6s ease, text-shadow 0.6s ease;
+    display: block;
+    animation: timerTick 1s ease-in-out infinite;
+    width: 400px;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    min-height: 80px;
+}
+
+/* Timer segments for day format */
+.timer-segments {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 8px;
+    width: 400px;
+}
+
+.timer-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.timer-value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1;
+    text-shadow:
+        0 0 20px rgba(248, 250, 252, 0.60),
+        0 0 40px rgba(34, 211, 238, 0.20),
+        0 0 60px rgba(34, 211, 238, 0.08);
+    min-width: 60px;
+    text-align: center;
+}
+
+.timer-unit {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(248, 250, 252, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+.timer-colon {
+    font-size: 3rem;
+    font-weight: 800;
+    color: rgba(248, 250, 252, 0.4);
+    font-family: 'Courier New', Courier, monospace;
+    margin-bottom: 12px;
+}
+
+/* Subtle per-second opacity breathe */
+@keyframes timerTick {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.88; }
+}
+
+.timer-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-top: 10px;
+}
+
+/* Timer pulse on completion */
+@keyframes timerComplete {
+    0%   { transform: scale(1);    opacity: 1; }
+    30%  { transform: scale(1.10); opacity: 1; }
+    60%  { transform: scale(0.97); opacity: 0.9; }
+    80%  { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1);    opacity: 1; }
+}
+
+.countdown.pulse {
+    animation: timerComplete 0.7s ease forwards;
+}
+
+/* ── Primary action button ────────────────────── */
+.close-btn {
+    display: inline-block;
+    background: rgba(34, 211, 238, 0.12);
+    border: 1px solid rgba(34, 211, 238, 0.50);
+    color: #22d3ee;
+    padding: 13px 36px;
+    font-size: 0.88rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    margin-top: 0;
+}
+
+.close-btn:hover {
+    background: rgba(34, 211, 238, 0.22);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.45);
+    transform: translateY(-1px);
+}
+
+.emergency-btn-corner {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 999999;
+    background: rgba(6, 10, 22, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.emergency-btn-corner:hover:not(:disabled) {
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+}
+
+.emergency-btn-corner:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: rgba(148, 163, 184, 0.2);
+    color: #64748b;
+}
+
+.close-btn:active { transform: scale(0.96); }
+
+/* Reward / success variant */
+.close-btn.success-mode {
+    background: rgba(34, 197, 94, 0.10);
+    border-color: rgba(34, 197, 94, 0.45);
+    color: #22c55e;
+}
+
+.close-btn.success-mode:hover {
+    background: rgba(34, 197, 94, 0.20);
+    box-shadow: 0 0 22px rgba(34, 197, 94, 0.40);
+}
+
+@keyframes rewardButtonIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.close-btn.success-mode {
+    animation: rewardButtonIn 0.5s ease 0.4s both;
+}
+
+
+
+/* ── Reward state: glow ring on card ─────────── */
+@keyframes rewardGlow {
+    0%   { box-shadow: 0 32px 64px -16px rgba(0,0,0,0.80), 0 0 0   0   rgba(34,197,94,0); }
+    50%  { box-shadow: 0 32px 64px -16px rgba(0,0,0,0.70), 0 0 60px 4px rgba(34,197,94,0.18); }
+    100% { box-shadow: 0 32px 64px -16px rgba(0,0,0,0.75), 0 0 40px 2px rgba(34,197,94,0.10); }
+}
+
+.glass-card.reward-mode {
+    border-color: rgba(34, 197, 94, 0.22);
+    animation: rewardGlow 0.8s ease forwards;
+}
+
+/* Heading colour shift on reward */
+.glass-card.reward-mode h1 {
+    color: #22c55e;
+    text-shadow: 0 0 22px rgba(34, 197, 94, 0.50);
+}
+
+/* ── Legacy bg-container: hidden (canvas replaces) */
+#bg-container, #bg-blur, #bg-sharp { display: none; }
+
+/* ── Confirmation Popup ───────────────────────────── */
+.confirm-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.confirm-popup-content {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 320px;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.confirm-popup-content p {
+    color: #f8fafc;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.confirm-note {
+    font-size: 0.8rem !important;
+    color: #94a3b8 !important;
+    margin-bottom: 20px !important;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-buttons .btn-primary,
+.confirm-buttons .btn-ghost {
+    padding: 8px 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.confirm-buttons .btn-primary {
+    background: #22d3ee;
+    border: 1px solid #22d3ee;
+    color: #0f172a;
+}
+
+.confirm-buttons .btn-primary:hover {
+    background: #67e8f9;
+    border-color: #67e8f9;
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+
+.confirm-buttons .btn-ghost {
+    background: transparent;
+    border: 1px solid #64748b;
+    color: #94a3b8;
+}
+
+.confirm-buttons .btn-ghost:hover {
+    border-color: #94a3b8;
+    color: #94a3b8;
+}
