@@ -1,79 +1,51 @@
 # Stofus 🛡️
 
-**Stofus** is a professional-grade Chrome extension designed to help you reclaim your focus and eliminate digital distractions. Built on the latest **Manifest V3** architecture, it provides a reliable, performant, and privacy-focused way to manage your online habits.
+Let's be real—social media and "just one quick check" rabbit holes are focus killers. We built **Stofus** because we were tired of losing hours to mindless scrolling when we should've been getting stuff done. 
+
+It’s a straightforward, no-nonsense web extension that actually puts you back in charge of your time. Since it's built on Manifest V3, it works perfectly on **Chrome, Brave, Edge**, and pretty much any Chromium-based browser.
 
 ---
 
-## ✨ Features
+## 🚀 What can it do?
 
-### 🚫 Intelligent Website Blocking
-- **Exact & Wildcard Matching**: Block specific domains (e.g., `facebook.com`) or entire subdomains using wildcards (e.g., `*.youtube.com`).
-- **Timed Blocks**: Set duration-based blocks for minutes, hours, or days.
-- **Smart Redirects**: Automatically diverts you to a beautiful, distraction-free landing page when you try to access a blocked site.
+### 🚫 Block the noise
+Add any site that distracts you (like `twitter.com` or `*.youtube.com`) and set a timer. Once it's blocked, Stofus redirects you to a chill landing page so you can get back to work.
 
-### 🔍 Keyword Content Filtering
-- **Strict Filtering**: Block pages based on specific keywords to avoid falling down "rabbit holes."
-- **Soft Bypass**: A 3-minute "Unintentional" bypass for keywords, allowing brief access when necessary with a mandatory cooldown period.
+### 🔍 Keyword filtering
+Stumble onto a "rabbit hole" topic? Stofus can scan pages for specific keywords and block them on the fly. If you accidentally hit a blocked keyword, there’s a quick 3-minute "Unintentional" bypass to let you finish what you were doing before the block kicks back in.
 
-### 🚨 Emergency Bypass
-- **Controlled Access**: Provides a 2-minute emergency unlock for blocked sites.
-- **Cooldown Mechanism**: Prevents abuse with a mandatory 1-hour cooldown after every emergency use.
+### 🚨 Emergency Unlock (with a catch)
+We know life happens. If you *really* need to check a blocked site, you can use the Emergency Unlock for 2 minutes. But use it wisely—once those 2 minutes are up, you're locked out for an hour. No cheating!
 
-### 📊 Real-time Productivity Stats
-- **Blocked Attempts**: Track how many times Stofus saved you from distraction.
-- **Focus Streaks**: Monitor your daily progress and build long-term focus habits.
-
-### 🎨 Modern UI/UX
-- **Glassmorphism Design**: A clean, modern aesthetic that feels like a native part of your OS.
-- **Responsive Dashboard**: Manage all your settings, blocked sites, and keywords from a single, intuitive popup.
+### 📈 Track your wins
+See exactly how many times Stofus saved you from a distraction and keep your focus streaks alive. 
 
 ---
 
-## 🛠️ Technical Overview
+## 🛠️ For the Techies
 
-Stofus is built with performance and stability in mind:
-
-- **Manifest V3**: Fully compliant with the latest Chrome Extension standards.
-- **Service Workers**: Efficient background processing using `background.js` for monitoring and blocking logic.
-- **Storage API**: Uses `chrome.storage.local` for fast, persistent, and private data management.
-- **Alarms API**: Handles timed events and expiration logic reliably, even when the browser is inactive.
-- **Content Scripts**: Dynamic keyword filtering and UI overlays injected directly into web pages.
+Stofus is built to be fast and private:
+- **Manifest V3**: Using the latest standards for better performance and security.
+- **Privacy First**: Everything—your blocked sites, keywords, and stats—stays on your computer. We don't track you, and we don't want your data.
+- **Universal**: Works on any Chromium browser (Chrome, Brave, Edge, Opera, etc.).
 
 ---
 
-## 🚀 Installation (Development Mode)
+## 🏃 How to run it
 
-Since Stofus is currently in development, you can install it manually:
+Since this is still in the "dev" phase, here's how to get it going:
 
-1. Clone this repository or download the source code.
-2. Open Google Chrome and navigate to `chrome://extensions/`.
-3. Enable **"Developer mode"** in the top right corner.
-4. Click **"Load unpacked"** and select the folder containing the Stofus source code.
-5. Pin the Stofus icon to your toolbar for easy access!
-
----
-
-## 📂 Project Structure
-
-- `manifest.json`: Extension configuration and permissions.
-- `background.js`: The heart of the extension, handling blocking logic and state.
-- `content.js`: Injected script for keyword filtering and UI overlays.
-- `popup.html/js`: The main user interface for managing focus settings.
-- `blocked.html/js`: The landing page displayed when a site is blocked.
-- `friction.html/js`: Optional "friction" page to discourage impulsive browsing.
+1. Download or clone this folder.
+2. Open your browser and go to the extensions page (e.g., `chrome://extensions`).
+3. Turn on **Developer Mode** (usually a toggle in the top right).
+4. Click **Load unpacked** and pick the Stofus folder.
+5. Pin it to your bar and start focusing!
 
 ---
 
-## 🛡️ Privacy
-
-Stofus is built with privacy as a core principle. **All data, including your blocked sites, keywords, and stats, is stored locally on your device.** No data is ever sent to external servers.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+## � License
+This project is under the MIT License—basically, do whatever you want with it!
 
 ---
 
-*Reclaim your time. Focus with Stofus.*
+*Stop scrolling. Start doing.*
