@@ -5,52 +5,50 @@ if (window.location.href.includes("blocked.html") || window.location.href.includ
     // Stop execution for this script on our own pages
 } else {
     // Load config on init
-    setTimeout(() => {
-        chrome.storage.local.get({ 
-            strictKeywords: [],
-            emergencyUnlock: { active: false, tabId: null, expiresAt: null, sessionId: null, usedInSession: false, cooldownUntil: null },
-            keywordBypass: {},
-            domainUnlocks: {} // domain-scoped temporary unlocks
-        }, (data) => {
-            strictKeywords = data.strictKeywords.map(k => k.toLowerCase());
+    chrome.storage.local.get({ 
+        strictKeywords: [],
+        emergencyUnlock: { active: false, tabId: null, expiresAt: null, sessionId: null, usedInSession: false, cooldownUntil: null },
+        keywordBypass: {},
+        domainUnlocks: {} // domain-scoped temporary unlocks
+    }, (data) => {
+        strictKeywords = data.strictKeywords.map(k => k.toLowerCase());
+        
+        // Check keyword bypass first
+        chrome.runtime.sendMessage({ action: 'checkMyTabId' }, (response) => {
+            if (response && response.tabId) {
+                const bypass = data.keywordBypass[response.tabId];
+                const now = Date.now();
+                
+                if (bypass && bypass.active && now < bypass.expiresAt) {
+                    // Keyword bypass is active - show timer overlay and skip filtering
+                    showBypassTimerOverlay(bypass.expiresAt);
+                    return; // ALLOW: Keyword bypass active for this tab
+                }
+            }
             
-            // Check keyword bypass first
-            chrome.runtime.sendMessage({ action: 'checkMyTabId' }, (response) => {
-                if (response && response.tabId) {
-                    const bypass = data.keywordBypass[response.tabId];
-                    const now = Date.now();
-                    
-                    if (bypass && bypass.active && now < bypass.expiresAt) {
-                        // Keyword bypass is active - show timer overlay and skip filtering
-                        showBypassTimerOverlay(bypass.expiresAt);
-                        return; // ALLOW: Keyword bypass active for this tab
-                    }
+            // Check domain-based unlock
+            const currentDomain = window.location.hostname;
+            const domainUnlock = data.domainUnlocks[currentDomain];
+            if (domainUnlock && domainUnlock.unlockExpiresAt && Date.now() < domainUnlock.unlockExpiresAt) {
+                // Domain unlock is active - show timer overlay and skip blocking
+                showDomainUnlockTimerOverlay(domainUnlock.unlockExpiresAt);
+                return; // ALLOW: Domain unlock active for this domain
+            }
+            
+            // Check emergency unlock
+            const eu = data.emergencyUnlock;
+            if (eu.active && Date.now() < eu.expiresAt) {
+                // Check if this tab is the one unlocked
+                if (response && response.tabId === eu.tabId) {
+                    showUnlockOverlay(eu.expiresAt);
+                    return; // ALLOW: Emergency unlock active for this tab
                 }
-                
-                // Check domain-based unlock
-                const currentDomain = window.location.hostname;
-                const domainUnlock = data.domainUnlocks[currentDomain];
-                if (domainUnlock && domainUnlock.unlockExpiresAt && Date.now() < domainUnlock.unlockExpiresAt) {
-                    // Domain unlock is active - show timer overlay and skip blocking
-                    showDomainUnlockTimerOverlay(domainUnlock.unlockExpiresAt);
-                    return; // ALLOW: Domain unlock active for this domain
-                }
-                
-                // Check emergency unlock
-                const eu = data.emergencyUnlock;
-                if (eu.active && Date.now() < eu.expiresAt) {
-                    // Check if this tab is the one unlocked
-                    if (response && response.tabId === eu.tabId) {
-                        showUnlockOverlay(eu.expiresAt);
-                        return; // ALLOW: Emergency unlock active for this tab
-                    }
-                }
-                
-                // No bypass active - proceed with keyword blocking
-                checkAndBlock();
-            });
+            }
+            
+            // No bypass active - proceed with keyword blocking
+            checkAndBlock();
         });
-    }, 200); // Wait 200ms for storage to update
+    });
 }
 
 function showBypassTimerOverlay(expiresAt) {

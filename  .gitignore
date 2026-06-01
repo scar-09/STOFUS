@@ -1,0 +1,15 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Chrome Extension artifacts
+*.crx
+*.pem
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Local project files
+project-description.txt

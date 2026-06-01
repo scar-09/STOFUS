@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Timer logic
     const urlParams = new URLSearchParams(window.location.search);
     const targetSite = urlParams.get('site');
+    const targetUrl = urlParams.get('url');
 
     // Emergency Unlock
     function updateEmergencyState() {
@@ -70,7 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Wait a moment for storage to update, then redirect
                 setTimeout(() => {
                     // Redirect to the original blocked website
-                    if (targetSite) {
+                    if (targetUrl) {
+                        window.location.href = targetUrl;
+                    } else if (targetSite) {
                         let urlTarget = targetSite;
                         if (!urlTarget.startsWith('http')) {
                             urlTarget = 'https://' + urlTarget;
@@ -92,12 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close tab
     closeBtn.addEventListener('click', () => {
-        if (stateBActive && targetSite) {
-            let urlTarget = targetSite;
-            if (!urlTarget.startsWith('http')) {
-                urlTarget = 'https://' + urlTarget;
+        if (stateBActive) {
+            if (targetUrl) {
+                chrome.tabs.getCurrent(tab => chrome.tabs.update(tab.id, { url: targetUrl }));
+            } else if (targetSite) {
+                let urlTarget = targetSite;
+                if (!urlTarget.startsWith('http')) {
+                    urlTarget = 'https://' + urlTarget;
+                }
+                chrome.tabs.getCurrent(tab => chrome.tabs.update(tab.id, { url: urlTarget }));
             }
-            chrome.tabs.getCurrent(tab => chrome.tabs.update(tab.id, { url: urlTarget }));
         } else {
             chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
         }

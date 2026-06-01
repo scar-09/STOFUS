@@ -1,5 +1,7 @@
 // Track recent blocks to prevent duplicate counting
 const recentBlocks = new Map();
+// Track recent checks to prevent redundant storage reads (Category C)
+const lastChecks = new Map();
 
 function checkAndBlock(tabId, urlString) {
     try {
@@ -11,9 +13,24 @@ function checkAndBlock(tabId, urlString) {
             hostname = hostname.substring(4);
         }
 
+        const now = Date.now();
+        const checkKey = `${tabId}-${urlString}`;
+
+        // Category C: Prevent redundant checks within 750ms for the exact same URL/Tab
+        if (lastChecks.has(checkKey) && (now - lastChecks.get(checkKey) < 750)) {
+            return;
+        }
+        lastChecks.set(checkKey, now);
+
+        // Clean up lastChecks (older than 5 seconds)
+        if (lastChecks.size > 50) {
+            for (const [key, timestamp] of lastChecks.entries()) {
+                if (now - timestamp > 5000) lastChecks.delete(key);
+            }
+        }
+
         // Deduplication: check if we recently blocked this same tab+hostname
         const blockKey = `${tabId}-${hostname}`;
-        const now = Date.now();
         if (recentBlocks.has(blockKey) && (now - recentBlocks.get(blockKey) < 2000)) {
             return; // Skip if we blocked this same tab+hostname within last 2 seconds
         }
@@ -33,13 +50,16 @@ function checkAndBlock(tabId, urlString) {
             
             // ✅ EMERGENCY UNLOCK BYPASS (CRITICAL: MUST BE FIRST)
             const eu = data.emergencyUnlock;
-            if (eu.active && tabId === eu.tabId) {
+            if (eu.active) {
                 if (Date.now() < eu.expiresAt) {
-                    return; // ALLOW: Active emergency unlock for this tab
+                    // Domain-based check for emergency unlock
+                    if (eu.domain === hostname || hostname.endsWith('.' + eu.domain)) {
+                        return; // ALLOW: Active emergency unlock for this domain
+                    }
                 } else {
                     // Deactivate expired unlock
                     chrome.storage.local.set({ 
-                        emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null }
+                        emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null, domain: null }
                     });
                 }
             }
@@ -113,10 +133,12 @@ function checkAndBlock(tabId, urlString) {
                     chrome.storage.local.set({ stats: stats });
                 });
                 
-                chrome.tabs.update(tabId, { url: chrome.runtime.getURL(`blocked.html?site=${hostname}`) });
+                chrome.tabs.update(tabId, { url: chrome.runtime.getURL(`blocked.html?site=${hostname}&url=${encodeURIComponent(urlString)}`) });
             }
         });
-    } catch (e) { }
+    } catch (e) {
+        console.error('Stofus: Error in checkAndBlock:', e);
+    }
 }
 
 // Listen to ALL Navigation to catch 'Back' and 'Forward' buttons
@@ -171,7 +193,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             // Set cooldown when unlock expires
             const cooldownUntil = now + (COOLDOWN_MIN * 60 * 1000);
             chrome.storage.local.set({ 
-                emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null, cooldownUntil: cooldownUntil }
+                emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null, domain: null, cooldownUntil: cooldownUntil }
             });
         });
     }
@@ -266,7 +288,7 @@ chrome.runtime.onStartup.addListener(() => {
         if (eu.active && eu.expiresAt) {
             if (Date.now() >= eu.expiresAt) {
                 chrome.storage.local.set({ 
-                    emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null }
+                    emergencyUnlock: { ...eu, active: false, tabId: null, expiresAt: null, domain: null }
                 });
             } else {
                 chrome.alarms.create('emergencyUnlockExpire', { when: eu.expiresAt });
@@ -315,6 +337,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
                     eu.active = false;
                     eu.tabId = null;
                     eu.expiresAt = null;
+                    eu.domain = null;
                     upd.emergencyUnlock = eu;
                     chrome.alarms.clear('emergencyUnlockExpire');
                 }
@@ -396,8 +419,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const DURATION_SEC = 120; // 2 minutes
         const COOLDOWN_MIN = 60;   // 60 minutes (1 hour)
         
+        let hostname = '';
+        try {
+            const url = new URL(sender.tab.url);
+            // If we are in blocked.html, the actual domain is in the 'site' query param
+            const urlParams = new URLSearchParams(url.search);
+            hostname = urlParams.get('site');
+            if (!hostname) {
+                hostname = url.hostname;
+                if (hostname.startsWith('www.')) hostname = hostname.substring(4);
+            }
+        } catch (e) {
+            return sendResponse({ success: false, reason: 'Invalid URL' });
+        }
+
+        if (!hostname) return sendResponse({ success: false, reason: 'Domain not found' });
+        
         chrome.storage.local.get({ 
-            emergencyUnlock: { active: false, tabId: null, expiresAt: null, sessionId: null, usedInSession: false, cooldownUntil: null }
+            emergencyUnlock: { active: false, tabId: null, expiresAt: null, sessionId: null, usedInSession: false, cooldownUntil: null, domain: null }
         }, (data) => {
             const eu = data.emergencyUnlock;
             const now = Date.now();
@@ -412,6 +451,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const newState = {
                 active: true,
                 tabId: sender.tab.id,
+                domain: hostname,
                 expiresAt: expiresAt,
                 sessionId: eu.sessionId,
                 usedInSession: true,
