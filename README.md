@@ -6,7 +6,17 @@ It’s a straightforward, no-nonsense web extension that actually puts you back 
 
 ---
 
-## 🚀 What can it do?
+## � Preview
+
+<p align="center">
+  <img src="screenshots/1.png" width="30%" />
+  <img src="screenshots/2.png" width="30%" /> 
+  <img src="screenshots/3.png" width="30%" />
+</p>
+
+---
+
+## �🚀 What can it do?
 
 ### 🚫 Block the noise
 Add any site that distracts you (like `twitter.com` or `*.youtube.com`) and set a timer. Once it's blocked, Stofus redirects you to a chill landing page so you can get back to work.
