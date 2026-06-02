@@ -36,7 +36,7 @@ See exactly how many times Stofus saved you from a distraction and keep your foc
 
 Stofus is built to be fast and private:
 - **Manifest V3**: Using the latest standards for better performance and security.
-- **Privacy First**: Everything—your blocked sites, keywords, and stats—stays on your computer. We don't track you, and we don't want your data.
+- **Privacy First**: Everything-your blocked sites, keywords, and stats—stays on your computer. We don't track you, and we don't want your data.
 - **Universal**: Works on any Chromium browser (Chrome, Brave, Edge, Opera, etc.).
 
 ---
