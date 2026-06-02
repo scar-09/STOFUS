@@ -1,6 +1,6 @@
 # Stofus 🛡️
 
-Let's be real—social media and "just one quick check" rabbit holes are focus killers. We built **Stofus** because we were tired of losing hours to mindless scrolling when we should've been getting stuff done. 
+Let's be real-social media and "just one quick check" rabbit holes are focus killers. We built **Stofus** because we were tired of losing hours to mindless scrolling when we should've been getting stuff done. 
 
 It’s a straightforward, no-nonsense web extension that actually puts you back in charge of your time. Since it's built on Manifest V3, it works perfectly on **Chrome, Brave, Edge**, and pretty much any Chromium-based browser.
 
