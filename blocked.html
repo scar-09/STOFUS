@@ -1,50 +1,29 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta charset="UTF-8">
-    <title>Stofus</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="blocked.css">
+  <meta charset="UTF-8">
+  <title>Stofus</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="blocked.css">
 </head>
-
 <body>
+  <div class="panel">
+    <div class="brand">STOFUS</div>
 
-    <div id="bg-container">
-        <div id="bg-blur"></div>
-        <div id="bg-sharp"></div>
-    </div>
-    <div class="glass-card">
-        <h1>WAIT!</h1>
-        <div class="timer-container">
-            <div id="countdown" class="countdown">--:--</div>
-            <div class="timer-label">REMAINING</div>
-        </div>
-
-        <div class="action-row" style="display: flex; gap: 12px; justify-content: center; margin-top: 10px;">
-            <button id="closeBtn" class="close-btn">Close Tab</button>
-        </div>
+    <div id="blockedState">
+      <div class="subtitle">Protection active</div>
+      <div class="timer" id="countdown">--:--</div>
+      <div class="info">This page will become available automatically.</div>
+      <button id="closeBtn" class="btn">[CLOSE TAB]</button>
     </div>
 
-    <button id="emergencyBtn" class="emergency-btn-corner">BYPASS</button>
-    
-    <!-- Confirmation Popup -->
-    <div id="emergencyConfirmPopup" class="confirm-popup" style="display: none;">
-        <div class="confirm-popup-content">
-            <p>This is a 2 minute bypass.</p>
-            <p class="confirm-note">Bypassing will put a 60 minutes cooldown on this feature globally.</p>
-            <div class="confirm-buttons">
-                <button id="emergencyConfirmYep" class="btn-primary">Yes, let me in</button>
-                <button id="emergencyConfirmNah" class="btn-ghost">Nah, I'm good</button>
-            </div>
-        </div>
+    <div id="unblockedState" style="display: none;">
+      <div class="subtitle">Protection complete</div>
+      <div class="info" style="margin-bottom: 32px;">You may continue.</div>
+      <button id="reloadBtn" class="btn">[RELOAD PAGE]</button>
     </div>
+  </div>
 
-
-
-    <script src="bg-canvas.js" data-bg-mode="block"></script>
-    <script src="blocked.js"></script>
+  <script src="blocked.js"></script>
 </body>
-
 </html>

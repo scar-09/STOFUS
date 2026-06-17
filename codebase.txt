@@ -1,0 +1,517 @@
+Stofus — Codebase Reference
+============================
+
+Last updated: 2026-06-17
+
+This document serves as both a project structure reference and a living
+audit of bugs, dead code, contradictions, and design decisions.
+
+────────────────────────────────────────────────────────────────────────
+1. PROJECT STRUCTURE
+────────────────────────────────────────────────────────────────────────
+
+Root Directory
+--------------
+├── manifest.json           # Manifest V3 configuration (62 lines)
+├── background.js           # Service worker (346 lines) — core blocking logic
+├── content.js              # Content script (213 lines) — keyword filtering & overlays
+├── popup.html              # Extension popup UI (160 lines)
+├── popup.js                # Popup logic & state management (796 lines)
+├── popup.css               # Popup styles — monochrome terminal (692 lines)
+├── blocked.html            # Timer/schedule block page (26 lines)
+├── blocked.js              # Block page logic — countdown, state B unblock (190 lines)
+├── blocked.css             # Block page styles — monochrome (111 lines)
+├── kw-blocked.html         # Keyword block page (34 lines)
+├── kw-blocked.js           # Keyword block logic — bypass, cooldown (162 lines)
+├── kw-blocked.css          # Keyword block styles — monochrome (142 lines)
+├── friction.html           # Friction/unlock page — reflection + timer + phrase (266 lines)
+├── friction.js             # Friction page logic — 3 phases (257 lines)
+├── welcome.html            # First-run briefing page (38 lines)
+├── welcome.css             # Welcome page styles — monochrome terminal (124 lines)
+├── welcome.js              # Welcome page script — opens chrome://extensions (3 lines)
+├── stofus16.png            # Extension icon 16x16
+├── stofus48.png            # Extension icon 48x48
+├── stofus128.png           # Extension icon 128x128
+├── README.md               # Project documentation
+├── LICENSE                 # MIT License
+├── .gitignore              # Git ignore rules
+├── codebase.txt            # THIS FILE
+├── screenshots/            # Preview images (1.png, 2.png, 3.png)
+
+REMOVED FILES:
+  bg-canvas.js              # Orphaned after interruption pages redesign
+
+────────────────────────────────────────────────────────────────────────
+2. DATA STRUCTURES (chrome.storage.local)
+────────────────────────────────────────────────────────────────────────
+
+Key                | Type     | Description
+────────────────────┼──────────┼──────────────────────────────────────────────
+blockedSites       | Array    | Active blocks. Each entry: { url, type, expiryTimestamp, durationMs, startTime, endTime, originalUnit, intendedDurationMinutes }
+strictKeywords     | Array    | List of blocked keyword strings
+keywordBypass      | Object   | Per-tab keyword bypass state: { [tabId]: { active, startTime, expiresAt, tabId, url, keyword, cooldownUntil } }
+focusSession       | Object?  | Current focus session: { startTime, duration } or null
+stats              | Object   | { attemptsBlocked, lastBreakTime, dailyFocusCompleted, focusTimeMinutes, streakCount, lastStreakDate }
+dailyAttempts      | Object   | Per-site and per-keyword blocked navigation attempts: { [YYYY-MM-DD]: { sites: { [hostname]: count }, keywords: { [keyword]: count } } }
+use12HourFormat    | Boolean  | UI preference for 12h vs 24h time display
+_pendingKeyword    | String   | Temp UI state for keyword input persistence
+
+REMOVED structures (no longer written):
+  - bypassSites — dead, never written, all read paths removed
+  - emergencyUnlock — removed feature
+  - domainUnlocks — removed feature
+  - stats.emergencyUsedToday, stats.emergencyUsedDate — removed fields
+  - stats_focusTimeMinutes (flat key)
+  - stats_attempts (flat key)
+  - stats_history (flat key)
+  - streak_count (flat key)
+  - last_streak_date (flat key)
+
+────────────────────────────────────────────────────────────────────────
+3. KEY FLOWS
+────────────────────────────────────────────────────────────────────────
+
+ 1. Navigation → webNavigation.onCommitted → checkAndBlock()
+    → domain match → redirect to blocked.html?site=X&type=Y&url=Z
+
+ 2. Keyword match in content.js → redirect to kw-blocked.html?kw=X&url=Y
+
+ 3. Popup "Block site" → chrome.storage.local.set({ blockedSites })
+    → background catches via storage.onChanged → creates focusSession
+
+ 4. Friction unlock → removes from blockedSites, reloads original tab,
+    closes friction tab. No temp unlock created.
+
+ 5. Cleanup alarm (1 min) → removes expired timer blocks,
+    updates stats (focusTime, streaks, dailyFocusCompleted)
+
+ 6. Keyword bypass → kw-blocked.js stores keywordBypass[tabId],
+    creates alarm for expiry → cooldown → cleanup
+
+ 7. Format toggle → rebuildTimePickers() in popup.js:
+    12h ↔ 24h. Hidden inputs are always 24h (source of truth).
+
+ 8. Block page states → blocked.html has two-state layout:
+    blockedState (timer countdown) ↔ unblockedState (protection complete)
+
+ 9. Duration unit → click-to-cycle button: Minutes → Hours → Days → Minutes
+
+10. Time pickers → editable text inputs with input validation and
+    blur-based clamping. No dropdowns.
+
+11. Content.js tracks keyword attempts in dailyAttempts[keywords]
+    before redirecting to kw-blocked.html.
+
+12. Popup attempts section split into "Websites" and "Keywords"
+    subsections, each showing attempt counts per item.
+
+13. Friction page has 3 phases:
+    a) Reflection (30s) — "What were you planning to do on this site?"
+    b) Friction timer (60s/180s/300s) — timer blocks only
+    c) Phrase input — "I choose to unlock this website"
+
+14. Schedule blocks skip the friction timer, showing end time info instead.
+
+15. Keyword bypass cleared on keyword removal from popup.
+
+────────────────────────────────────────────────────────────────────────
+4. BUGS (fixed)
+────────────────────────────────────────────────────────────────────────
+
+[B1] popup.js: formatTime name collision — FIXED
+─────────────────────────────────────────────────────
+Dead duplicate formatTime(minutes) at line 686 was removed.
+Only formatTime(hours, minutes, use12h) remains.
+
+[B2] friction.js: calculateFrictionDelay double-converts — FIXED
+──────────────────────────────────────────────────────────────────
+Now uses durationMinutes directly (already in minutes).
+No more multiplication by originalUnit conversion factor.
+
+[B3] popup.js: document.execCommand deprecated — FIXED
+────────────────────────────────────────────────────────
+Paste handler replaced with direct .value = numeric +
+dispatchEvent(new Event('input', { bubbles: true })).
+
+[B4] kw-blocked.js: closeBtn/confirmNah async race — FIXED
+────────────────────────────────────────────────────────────
+Buttons disabled on page load. currentTab cached via
+chrome.tabs.getCurrent. Buttons enabled only after callback.
+
+[B5] friction.js: duplicate webkitvisibilitychange listener — FIXED
+────────────────────────────────────────────────────────────────────
+Removed duplicate listener. Only visibilitychange remains.
+
+[B6] background.js: cleanup alarm stats defaults — FIXED
+──────────────────────────────────────────────────────────
+.get() defaults include stats: null; stats object initialized
+with all required fields (focusTimeMinutes, streakCount, etc.).
+
+[B7] popup.js: block handler redirect missing type param — FIXED
+──────────────────────────────────────────────────────────────────
+Redirect URL now includes &type=${mode} so blocked.js receives
+correct block type (schedule/timer).
+
+[B8] content.js: keyword regex false positives — FIXED
+───────────────────────────────────────────────────────
+Suffix regex changed from (s|es|ed|ing)? to s? to prevent
+words like "cares" matching keyword "car".
+
+[B9] popup.js: patterns toggle requires double-click — FIXED
+──────────────────────────────────────────────────────────────
+First click on "Attempts today" passed through collapsed accordion
+content to the label underneath. Now auto-opens patterns body on
+first STATUS accordion open via change listener.
+
+[B10] popup.js: cyan status messages — FIXED
+─────────────────────────────────────────────
+showStatus calls changed from cyan (#22d3ee) to white (#F5F5F5)
+for keyword-added and site-blocked messages.
+
+[B11] popup.html: strict block warning — REMOVED
+─────────────────────────────────────────────────
+Red "Strict block. No bypass available." line removed entirely.
+
+[B12] popup.html/popup.css: cyan timeFormatToggle — FIXED
+───────────────────────────────────────────────────────────
+Inline cyan styles replaced with CSS-driven monochrome values.
+
+[B13] popup.js + kw-blocked.js: bypass cleared on keyword removal — FIXED
+──────────────────────────────────────────────────────────────────────────
+kw-blocked.js now stores keyword name in bypass object.
+popup.js removeKeyword() also deletes matching keywordBypass
+entries and clears their expiration/cooldown alarms.
+background.js propagates keyword field to cooldown objects.
+
+[B14] dailyAttempts: keyword tracking + split display — FIXED
+────────────────────────────────────────────────────────────────
+dailyAttempts structure changed from flat { hostname: count }
+to nested { sites: { hostname: count }, keywords: { keyword: count } }.
+content.js now records keyword attempts before KW-block redirect.
+popup.js attempts display split into "Websites" and "Keywords"
+subsections with .patterns-subhead styling (muted uppercase label).
+Old flat data is auto-migrated on first read in popup.js.
+
+[B15] friction.js: flat 3-tier friction delay + schedule skip — FIXED
+───────────────────────────────────────────────────────────────────────
+calculateFrictionDelay simplified to 3 flat tiers (60s/180s/300s).
+Block type detection added: popup.js passes &type in friction URL,
+friction.js reads it and skips the timer entirely for schedule blocks,
+going straight to the phrase input. Old 6-tier scaling removed.
+
+[B16] friction.html/js: reflection phase added — FIXED
+─────────────────────────────────────────────────────────
+New reflection phase precedes the countdown timer on ALL block types.
+Shows "What were you planning to do on this site?" with "Take 30 seconds
+to think about it." and a 30-second static countdown. After 30s, timer
+blocks proceed to the friction timer; schedule blocks go straight to
+phrase input. Tab-focus loss is ignored during reflection. New HTML
+section (reflectionSection) styled consistently with the existing
+timer/input sections.
+
+[B17] friction.html/js: schedule info display + timer label — FIXED
+─────────────────────────────────────────────────────────────────────
+Schedule blocks (blockType === 'schedule') now show a schedule info box
+after reflection: "Your block ends at [endTime]. You set this boundary
+yourself." then the phrase input. endTime is read from blockedSite
+storage entry. Timer label changed: "Take a moment" during reflection,
+"seconds remaining" during friction timer.
+
+[B18] popup.js/css: remove button for all block types — FIXED
+────────────────────────────────────────────────────────────────
+Remove button previously only appeared for schedule blocks (guarded
+by site.type === 'schedule'). Now every site gets a "Remove" button
+that opens the friction page with the correct &type= param.
+
+[B19] welcome page: rewritten as monochrome terminal briefing — FIXED
+───────────────────────────────────────────────────────────────────────
+Old welcome page used Montserrat, navy bg, cyan accents, glass card.
+Rewritten: JetBrains Mono, #050505 bg, monochrome palette, constrained
+content column, bullet-point lists, terminal-briefing style. Created
+welcome.css (124 lines) — removed Montserrat import, inline <style>,
+warning card, all legacy styles. Incognito button restyled to match
+popup .btn style.
+
+[B20] popup.html: STOFUS 1.0 header — FIXED
+──────────────────────────────────────────────
+Header title changed from "STOFUS 1.0" to "STOFUS".
+
+[B21] popup.css: UI smoothness improvements — FIXED
+──────────────────────────────────────────────────────
+Removed wasted box-shadow transition on inputs. Added will-change on
+accordion content, patterns body, collapsible lists, and protection dot
+for GPU-accelerated transitions. Status message now fades out (opacity)
+instead of instant textContent clear.
+
+[B22] popup.css: user-select: none on status text — FIXED
+───────────────────────────────────────────────────────────
+Added user-select: none to all read-only status UI: protection text,
+count cards, empty-state messages, next-expiry labels, and all patterns
+section text. Site URLs and Remove buttons remain selectable.
+
+────────────────────────────────────────────────────────────────────────
+5. CONTRADICTIONS & MISALIGNMENTS
+────────────────────────────────────────────────────────────────────────
+
+[C1] README.md still mentions Emergency Unlock — FIXED
+────────────────────────────────────────────────────────
+Replaced Emergency Unlock section with Schedule blocking section.
+
+[C2] popup.html says "5-min temp unlock available" — FIXED
+─────────────────────────────────────────────────────────────
+Text changed to "Repeats daily, no unlock during blocked period."
+
+[C3] background.js comment: "Schedule block - bypass allowed" — FIXED
+───────────────────────────────────────────────────────────────────────
+Dead bypassSites check (including misleading comment) removed.
+
+[C4] README doesn't mention schedule blocks — FIXED
+────────────────────────────────────────────────────
+README now has a Schedule blocking section.
+
+[C5] README mentions keyword bypass timing — FIXED
+───────────────────────────────────────────────────
+README line 25: "3-minute 'Unintentional' bypass" matches
+kw-blocked.js (3 * 60 * 1000). Consistent.
+
+────────────────────────────────────────────────────────────────────────
+6. DEAD CODE (removed)
+────────────────────────────────────────────────────────────────────────
+
+[D1] background.js: bypassSites — REMOVED
+───────────────────────────────────────────
+Dead bypassSites check, cleanup, storage defaults all removed.
+
+[D2] background.js: nukeTab message handler — REMOVED
+───────────────────────────────────────────────────────
+Removed entire message handler for 'nukeTab'.
+
+[D3] blocked.css: .emergency-btn-corner — REMOVED
+──────────────────────────────────────────────────
+~30 lines of dead emergency button styles removed.
+
+[D4] blocked.css: .confirm-popup styles — REMOVED
+───────────────────────────────────────────────────
+~80 lines of dead confirmation popup styles removed.
+
+[D5] popup.js: dead declarations — REMOVED
+────────────────────────────────────────────
+Removed: undoTimer, isDuplicate, validateAndClampDuration(),
+formatTimeAgo().
+
+[D6] blocked.html/kw-blocked.html: bg-container — REMOVED
+───────────────────────────────────────────────────────────
+Dead <div id="bg-container"> and children removed from both files.
+Canvas is injected by bg-canvas.js at runtime.
+
+[D7] blocked.css/kw-blocked.css: bg-container hiding rules — REMOVED
+──────────────────────────────────────────────────────────────────────
+Removed #bg-container, #bg-blur, #bg-sharp { display: none }.
+
+[D8] popup.css: bg-anim-canvas hiding rule — REMOVED
+──────────────────────────────────────────────────────
+Removed #bg-anim-canvas, #bg-grain { display: none !important }.
+
+[D9] background.js: old flat stat keys in checkAndBlock — REMOVED
+───────────────────────────────────────────────────────────────────
+Removed 5 unused old-format keys from .get() defaults.
+Removed site._scheduleWindowMins assignment.
+
+[D10] blocked.js: unused blockType var — REMOVED
+──────────────────────────────────────────────────
+const blockType = urlParams.get('type') || 'timer' removed.
+
+[D11] friction.js: unused durationUnit param — REMOVED
+────────────────────────────────────────────────────────
+Removed from calculateFrictionDelay signature and call site.
+
+[D12] popup.css: scaling-notice hiding rule — REMOVED
+──────────────────────────────────────────────────────
+.scaling-notice { display: none !important } removed.
+
+[D13] Interruption pages: glass/cyan/glow system — REMOVED
+────────────────────────────────────────────────────────────
+blocked.css, kw-blocked.css, friction.html: all glassmorphism
+(backdrop-filter), cyan (#22d3ee), glow effects, decorative
+animations, Montserrat font removed. Replaced with JetBrains Mono
+monochrome design.
+
+[D14] bg-canvas.js — DELETED
+──────────────────────────────
+Orphaned after interruption pages redesign. No HTML page loads it.
+
+[D15] blocked.js: reward/celebration code — REMOVED
+────────────────────────────────────────────────────
+Removed: pulse animation, reward card glow, "GO AHEAD YOU EARNED IT"
+text, canvas event dispatch, success-mode class, stateBActive reload
+path from closeBtn.
+
+[D16] popup.css/HTML: all dropdown arrows — REMOVED
+────────────────────────────────────────────────────
+.time-select and .duration-unit no longer have appearance: none,
+background-image dropdown SVG, or extra right-padding for arrow.
+Time pickers are editable text inputs; duration unit is a
+click-to-cycle button.
+
+[D17] popup.css: dead option rules — REMOVED
+─────────────────────────────────────────────
+.time-select option and .duration-unit option CSS removed (no more
+<option> elements in popup).
+
+[D18] popup.html/.js: time picker dropdowns — REMOVED
+──────────────────────────────────────────────────────
+All hour/minute <select> replaced with <input type="text">.
+Duration unit <select> replaced with <button>.
+
+[D19] kw-blocked.js/.css: bypass button restyled — DONE
+─────────────────────────────────────────────────────────
+Button format changed from orange "Bypass Active (2:45)"
+to monochrome "[BYPASS 2:45]". Background: #0F0F0F,
+text: #F5F5F5, border: #2A2A2A. Disabled state uses
+muted colors (#7A7A7A, #1A1A1A) instead of 0.35 opacity.
+
+[D20] welcome page: legacy design — REMOVED
+──────────────────────────────────────────────
+Montserrat font import, navy #0f172a background, cyan #22d3ee accents,
+glass container with border-radius:12px, warning card with red border,
+colored button (cyan bg, navy text) — all removed. Replaced with
+monochrome terminal design in welcome.css.
+
+────────────────────────────────────────────────────────────────────────
+7. REMAINING OBSERVATIONS
+────────────────────────────────────────────────────────────────────────
+
+[O1] background.js: history.onVisited listener
+───────────────────────────────────────────────
+Redundant with webNavigation.onCommitted — every page visit is
+checked twice. Harmless due to lastChecks dedup but wasteful.
+
+[O2] friction.js: reloadTabId NaN handling
+───────────────────────────────────────────
+isNaN check logs error but doesn't early-return. Safe because
+usage guards with !isNaN(reloadTabId).
+
+[O3] popup.js: keypress event deprecated
+─────────────────────────────────────────
+timerInput keypress listener uses deprecated event. Should use
+beforeinput or keydown in modern Chrome. Still functional.
+
+[O4] Storage key fragmentation eliminated
+──────────────────────────────────────────
+Old flat keys (stats_focusTimeMinutes, stats_attempts,
+stats_history, streak_count, last_streak_date) are no longer
+written by any code. All stat tracking uses stats object and
+dailyAttempts object exclusively.
+
+[O5] popup.js: accordion label aria
+────────────────────────────────────
+Accordion uses checkbox hack with hidden <input type="checkbox">
+and <label for>. No ARIA attributes. Functional but not accessible.
+
+────────────────────────────────────────────────────────────────────────
+8. LINE-COUNT SUMMARY
+────────────────────────────────────────────────────────────────────────
+
+File            Lines  Type
+───────────────────────┬─────────────────────────────────────────────────
+popup.js          796  │ Popup controller (largest file)
+popup.css         692  │ Popup styles — monochrome terminal
+background.js     346  │ Service worker
+friction.html     266  │ Friction page (reflection + timer + phrase)
+friction.js       257  │ Friction page logic
+content.js        213  │ Content script
+kw-blocked.js     162  │ Keyword block logic
+kw-blocked.css    142  │ Keyword block styles
+welcome.css       124  │ Welcome page styles — monochrome
+blocked.js        190  │ Block page logic
+popup.html        160  │ Popup markup
+blocked.css       111  │ Block page styles
+kw-blocked.html    34  │ Keyword block markup
+welcome.html       38  │ Welcome page markup
+blocked.html       26  │ Block page markup
+manifest.json      62  │ Extension manifest
+welcome.js          3  │ Welcome page script
+README.md          39  │ Project documentation
+codebase.txt       ~   │ This file
+───────────────────────┴─────────────────────────────────────────────────
+
+REMOVED:
+  bg-canvas.js     298  │ Animated background (deleted)
+  welcome.html legacy ~70  │ Old inline styles removed (~15 lines of CSS)
+
+────────────────────────────────────────────────────────────────────────
+9. DESIGN DECISIONS
+────────────────────────────────────────────────────────────────────────
+
+  - All times stored internally in 24h format. Hidden inputs (startTimeInput,
+    endTimeInput) are the single source of truth. Time picker inputs and
+    meridiem buttons are UI-only, updated via rebuildTimePickers() on format
+    toggle.
+
+  - Timer blocks: strict, no bypass possible. Schedule blocks: no temp
+    unlock either. Friction page is the ONLY removal path.
+
+  - Keyword bypass: 3 min active, 45 min cooldown. Per-tab tracking.
+    Bypass cleared when keyword is removed from popup.
+
+  - Focus session: created when blockedSites become active, destroyed when
+    all blocks expire/are removed. Duration = max block duration or schedule
+    window size.
+
+  - Undo: 5-second window, reverts last block addition including stats and
+    dailyAttempts.
+
+  - Accordion: single-open behavior via checkbox hack.
+
+  - Interruption pages (blocked/kw-blocked/friction) are not dashboards.
+    They are checkpoints: inform, enforce, guide. No gamification, no
+    celebration, no emotional language.
+
+  - Friction page has 3 sequential phases:
+    1. Reflection (30s) — "What were you planning to do on this site?"
+    2. Friction timer (60s/180s/300s) — timer blocks only
+    3. Phrase input — "I choose to unlock this website"
+    Schedule blocks: reflection → schedule end time info → phrase input.
+
+  - Monochrome command-console palette:
+    Background:   #050505
+    Surface:      #0F0F0F
+    Elevated:     #151515
+    Borders:      #2A2A2A
+    Primary text: #F5F5F5
+    Secondary:    #B3B3B3
+    Muted:        #7A7A7A
+    Active:       #D4D4D4
+    Semantic:     #22C55E (success), #F59E0B (warning), #EF4444 (danger)
+    Font:         JetBrains Mono
+    Radius:       4px
+    Effects:      None — no glow, no blur, no glass, no neon, no particles
+
+  - Time pickers: editable text inputs (no dropdowns). Non-digit chars
+    stripped on input; range clamped on blur (hour: 0-23 or 1-12, minute:
+    0-59). Empty fields default to 12 (12h) or 00 (24h).
+
+  - Duration unit: click-to-cycle button (Minutes → Hours → Days → Minutes).
+    Timer value resets to unit default on each cycle.
+
+  - Popup status bar: monochrome text (white for success, amber for undo,
+    no cyan). Fades out smoothly instead of instant clear.
+
+  - Stats consolidated into two objects: stats (aggregate/lifetime values)
+    and dailyAttempts (per-site + per-keyword blocked navigation counts).
+    Nested as { sites: {...}, keywords: {...} } under each date key.
+    Old flat format auto-migrated on first popup render.
+
+  - All transition: all replaced with explicit property lists.
+    Accordion content uses consistent 0.3s ease with fixed padding
+    (no padding transition to prevent content shift).
+
+  - will-change hints added on animated elements (accordion content,
+    patterns body, collapsible lists, protection dot) for GPU-accelerated
+    transitions.
+
+  - Read-only status text has user-select: none to prevent accidental
+    text selection. Site URLs and Remove buttons remain selectable.
+
+  - Welcome page is a terminal briefing, not a marketing page. First-run
+    document with bullet-point sections. No card, no glass, no colors.

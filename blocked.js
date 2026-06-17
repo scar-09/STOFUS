@@ -1,143 +1,67 @@
 document.addEventListener('DOMContentLoaded', () => {
     const countdownEl = document.getElementById('countdown');
     const closeBtn = document.getElementById('closeBtn');
-    const emergencyBtn = document.getElementById('emergencyBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+    const blockedState = document.getElementById('blockedState');
+    const unblockedState = document.getElementById('unblockedState');
 
     let stateBActive = false;
-    let emergencyActive = false;
+    let timerInterval = null;
+    let currentTab = null;
+    let cachedBlockedSites = [];
+
+    function clearAllIntervals() {
+        if (timerInterval !== null) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    window.addEventListener('beforeunload', clearAllIntervals);
 
     // Timer logic
     const urlParams = new URLSearchParams(window.location.search);
     const targetSite = urlParams.get('site');
     const targetUrl = urlParams.get('url');
+    // Disable buttons until tab reference is confirmed
+    closeBtn.disabled = true;
 
-    // Emergency Unlock
-    function updateEmergencyState() {
-        chrome.storage.local.get({ 
-            blockedSites: [],
-            emergencyUnlock: { active: false, tabId: null, expiresAt: null, sessionId: null, usedInSession: false, cooldownUntil: null }
-        }, (data) => {
-            const eu = data.emergencyUnlock;
-            const now = Date.now();
-            const activeSites = (data.blockedSites || []).filter(s => now < s.expiryTimestamp);
-            const isFocusSessionActive = activeSites.length > 0;
-            const isBlocked = !!targetSite; // In blocked.html, if targetSite exists, it means we are in a block state
-
-            // UI RESTRICTION: Only show on active block screen during focus session
-            if (!isFocusSessionActive || !isBlocked || stateBActive) {
-                emergencyBtn.style.display = 'none';
-                return;
-            }
-
-            emergencyBtn.style.display = 'block';
-            
-            let label = "Unlock (2m)";
-            let disabled = false;
-            
-            if (eu.active) {
-                disabled = true;
-                label = "Active";
-            } else if (eu.cooldownUntil && now < eu.cooldownUntil) {
-                disabled = true;
-                const rem = Math.ceil((eu.cooldownUntil - now) / 60000);
-                label = `Cooldown (${rem}m)`;
-            } else if (eu.usedInSession) {
-                disabled = true;
-                label = "Used";
-            }
-            
-            emergencyBtn.disabled = disabled;
-            emergencyBtn.textContent = label;
-        });
-    }
-
-    updateEmergencyState();
-    setInterval(updateEmergencyState, 5000);
-
-    emergencyBtn.addEventListener('click', () => {
-        const confirmPopup = document.getElementById('emergencyConfirmPopup');
-        confirmPopup.style.display = 'flex';
+    // Cache current tab reference
+    chrome.tabs.getCurrent(tab => {
+        currentTab = tab;
+        if (currentTab) {
+            closeBtn.disabled = false;
+            if (reloadBtn) reloadBtn.disabled = false;
+        }
     });
 
-    // Yep button - proceed with bypass
-    document.getElementById('emergencyConfirmYep').addEventListener('click', () => {
-        const confirmPopup = document.getElementById('emergencyConfirmPopup');
-        confirmPopup.style.display = 'none';
-        
-        chrome.runtime.sendMessage({ action: 'activateEmergencyUnlock' }, (response) => {
-            if (response && response.success) {
-                emergencyActive = true;
-                updateEmergencyState();
-                // Wait a moment for storage to update, then redirect
-                setTimeout(() => {
-                    // Redirect to the original blocked website
-                    if (targetUrl) {
-                        window.location.href = targetUrl;
-                    } else if (targetSite) {
-                        let urlTarget = targetSite;
-                        if (!urlTarget.startsWith('http')) {
-                            urlTarget = 'https://' + urlTarget;
-                        }
-                        window.location.href = urlTarget;
-                    }
-                }, 100);
-            } else {
-                alert(response ? response.reason : 'Activation failed');
-            }
-        });
-    });
-
-    // Nah button - close popup
-    document.getElementById('emergencyConfirmNah').addEventListener('click', () => {
-        const confirmPopup = document.getElementById('emergencyConfirmPopup');
-        confirmPopup.style.display = 'none';
-    });
-
-    // Close tab
     closeBtn.addEventListener('click', () => {
-        if (stateBActive) {
+        if (!currentTab) return;
+        chrome.tabs.remove(currentTab.id);
+    });
+
+    if (reloadBtn) {
+        reloadBtn.addEventListener('click', () => {
+            if (!currentTab) return;
             if (targetUrl) {
-                chrome.tabs.getCurrent(tab => chrome.tabs.update(tab.id, { url: targetUrl }));
+                chrome.tabs.update(currentTab.id, { url: targetUrl });
             } else if (targetSite) {
                 let urlTarget = targetSite;
                 if (!urlTarget.startsWith('http')) {
                     urlTarget = 'https://' + urlTarget;
                 }
-                chrome.tabs.getCurrent(tab => chrome.tabs.update(tab.id, { url: urlTarget }));
+                chrome.tabs.update(currentTab.id, { url: urlTarget });
             }
-        } else {
-            chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
-        }
-    });
+        });
+    }
 
     function triggerStateB() {
         if (stateBActive) return;
         stateBActive = true;
+        clearAllIntervals();
 
-        // Completion pulse on timer element
-        countdownEl.classList.add('pulse');
-        countdownEl.addEventListener('animationend', () => {
-            countdownEl.textContent = '00:00';
-            countdownEl.classList.remove('pulse');
-        }, { once: true });
-
-        // Reward card glow
-        const card = document.querySelector('.glass-card');
-        if (card) card.classList.add('reward-mode');
-
-        // Content swap (slight delay so pulse plays first)
-        setTimeout(() => {
-            document.querySelector('h1').textContent = 'GO AHEAD, YOU EARNED IT.';
-        }, 400);
-
-        // Notify canvas to switch to reward intensity
-        window.dispatchEvent(new CustomEvent('bg-mode-change', { detail: { mode: 'reward' } }));
-
-
-
-        // Button transform
-        closeBtn.textContent = 'Reload page';
-        closeBtn.classList.add('success-mode');
+        if (blockedState) blockedState.style.display = 'none';
+        if (unblockedState) unblockedState.style.display = 'block';
     }
 
     function formatTimerDisplay(totalSeconds) {
@@ -184,14 +108,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTimer() {
-        chrome.storage.local.get({ blockedSites: [] }, (data) => {
-            const now = Date.now();
-            let activeSites = data.blockedSites.filter(s => now < s.expiryTimestamp);
+        if (stateBActive) return;
+        const now = Date.now();
+        let activeSites = [];
+        
+        const date = new Date(now);
+        const currentMins = date.getHours() * 60 + date.getMinutes();
+
+        if (!Array.isArray(cachedBlockedSites)) return;
+        cachedBlockedSites.forEach(s => {
+                if (s.type === 'schedule') {
+                    if (!s.startTime || !s.endTime) return;
+                    const [sh, sm] = s.startTime.split(':').map(Number);
+                    const [eh, em] = s.endTime.split(':').map(Number);
+                    const startMins = sh * 60 + sm;
+                    const endMins = eh * 60 + em;
+                    let isActive = false;
+                    if (startMins < endMins) {
+                        isActive = currentMins >= startMins && currentMins < endMins;
+                    } else {
+                        isActive = currentMins >= startMins || currentMins < endMins;
+                    }
+                    if (isActive) activeSites.push(s);
+                } else {
+                    if (now < s.expiryTimestamp) activeSites.push(s);
+                }
+            });
 
             if (activeSites.length > 0) {
                 let siteBlock;
                 if (targetSite) {
                     siteBlock = activeSites.find(s => {
+                        if (!s.url) return false;
                         if (s.url.startsWith('*.')) {
                             const bd = s.url.substring(2);
                             return targetSite === bd || targetSite.endsWith('.' + bd);
@@ -201,37 +149,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (!siteBlock) {
-                    const maxExpiry = Math.max(...activeSites.map(s => s.expiryTimestamp));
-                    siteBlock = { expiryTimestamp: maxExpiry };
+                    return;
                 }
 
-                const remainingTime = siteBlock.expiryTimestamp - now;
-
-                if (remainingTime > 0) {
-                    const totalSeconds = Math.floor(remainingTime / 1000);
-                    
-                    // Clear any existing segments
-                    const existingSegments = countdownEl.querySelector('.timer-segments');
-                    if (existingSegments) {
-                        existingSegments.remove();
-                    }
-
-                    if (totalSeconds >= 86400) {
-                        // Use segmented display for days format
-                        countdownEl.innerHTML = createDaySegments(totalSeconds);
-                    } else {
-                        // Use standard text display for hours/minutes
+                if (siteBlock.type === 'schedule') {
+                     // For schedule blocks, we don't show a countdown in the same way,
+                     // but we could show time until end of schedule. For now, let's just
+                     // clear segments and say "Scheduled" or calculate remaining time today.
+                     if (!siteBlock.endTime) return;
+                     const [eh, em] = siteBlock.endTime.split(':').map(Number);
+                     const endMins = eh * 60 + em;
+                     let diffMins = endMins - currentMins;
+                     if (diffMins < 0) diffMins += 24 * 60; // Overnight
+                     
+                     const totalSeconds = Math.max(0, diffMins * 60 - date.getSeconds());
+                     if (totalSeconds > 0) {
+                        const existingSegments = countdownEl.querySelector('.timer-segments');
+                        if (existingSegments) existingSegments.remove();
                         countdownEl.textContent = formatTimerDisplay(totalSeconds);
-                    }
+                     } else {
+                        triggerStateB();
+                     }
                 } else {
-                    triggerStateB();
+                    const remainingTime = siteBlock.expiryTimestamp - now;
+                    if (remainingTime > 0) {
+                        const totalSeconds = Math.floor(remainingTime / 1000);
+                        
+                        // Clear any existing segments
+                        const existingSegments = countdownEl.querySelector('.timer-segments');
+                        if (existingSegments) {
+                            existingSegments.remove();
+                        }
+
+                        if (totalSeconds >= 86400) {
+                            // Use segmented display for days format
+                            countdownEl.innerHTML = createDaySegments(totalSeconds);
+                        } else {
+                            // Use standard text display for hours/minutes
+                            countdownEl.textContent = formatTimerDisplay(totalSeconds);
+                        }
+                    } else {
+                        triggerStateB();
+                    }
                 }
             } else {
                 triggerStateB();
             }
-        });
     }
 
-    updateTimer();
-    setInterval(updateTimer, 1000);
+    chrome.storage.local.get({ blockedSites: [] }, (data) => {
+        cachedBlockedSites = data.blockedSites;
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+    });
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.blockedSites) {
+            cachedBlockedSites = changes.blockedSites.newValue;
+        }
+    });
 });

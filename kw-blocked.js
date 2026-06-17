@@ -1,3 +1,12 @@
+let bypassTimeoutId = null;
+
+window.addEventListener('beforeunload', () => {
+    if (bypassTimeoutId !== null) {
+        clearTimeout(bypassTimeoutId);
+        bypassTimeoutId = null;
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const matchedKeywordEl = document.getElementById('matchedKeyword');
     const goBackBtn = document.getElementById('goBackBtn');
@@ -14,8 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
         matchedKeywordEl.textContent = 'a restricted keyword';
     }
 
-    // Check bypass state
+    // Disable buttons until tab reference is confirmed
+    closeBtn.disabled = true;
+    document.getElementById('confirmNah').disabled = true;
+    document.getElementById('confirmYep').disabled = true;
+
+    // Cache current tab reference
+    let currentTab = null;
     chrome.tabs.getCurrent((tab) => {
+        currentTab = tab;
+        closeBtn.disabled = false;
+        document.getElementById('confirmNah').disabled = false;
+        document.getElementById('confirmYep').disabled = false;
+
         if (tab) {
             chrome.storage.local.get({ keywordBypass: {} }, (data) => {
                 const bypass = data.keywordBypass[tab.id] || {};
@@ -30,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     closeBtn.addEventListener('click', () => {
-        chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
+        if (currentTab) chrome.tabs.remove(currentTab.id);
     });
 
     // Unintentional bypass button
@@ -47,53 +67,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Yep button - proceed with bypass
     document.getElementById('confirmYep').addEventListener('click', () => {
+        if (!currentTab) return;
         const confirmPopup = document.getElementById('confirmPopup');
         confirmPopup.style.display = 'none';
         
-        chrome.tabs.getCurrent((tab) => {
-            if (tab) {
-                const now = Date.now();
-                const bypass = {
-                    active: true,
-                    startTime: now,
-                    expiresAt: now + (3 * 60 * 1000), // 3 minutes
-                    tabId: tab.id,
-                    url: tab.url
-                };
+        const now = Date.now();
+        const bypass = {
+            active: true,
+            startTime: now,
+            expiresAt: now + (3 * 60 * 1000), // 3 minutes
+            tabId: currentTab.id,
+            url: currentTab.url,
+            keyword: kwMatch
+        };
 
-                chrome.storage.local.get({ keywordBypass: {} }, (data) => {
-                    const allBypasses = data.keywordBypass || {};
-                    allBypasses[tab.id] = bypass;
-                    
-                    chrome.storage.local.set({ keywordBypass: allBypasses }, () => {
-                        // Create alarm for bypass expiration
-                        chrome.runtime.sendMessage({
-                            action: 'createKeywordBypassAlarm',
-                            tabId: tab.id,
-                            expiresAt: bypass.expiresAt
-                        });
-                        
-                        // Get the original URL before the block page
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const originalUrl = urlParams.get('url') || tab.url;
-                        
-                        // Redirect to original URL
-                        window.location.href = originalUrl;
-                    });
+        chrome.storage.local.get({ keywordBypass: {} }, (data) => {
+            const allBypasses = data.keywordBypass || {};
+            allBypasses[currentTab.id] = bypass;
+            
+            chrome.storage.local.set({ keywordBypass: allBypasses }, () => {
+                // Create alarm for bypass expiration
+                chrome.runtime.sendMessage({
+                    action: 'createKeywordBypassAlarm',
+                    tabId: currentTab.id,
+                    expiresAt: bypass.expiresAt
                 });
-            }
+                
+                // Get the original URL before the block page
+                const urlParams = new URLSearchParams(window.location.search);
+                let originalUrl = urlParams.get('url');
+                if (!originalUrl || originalUrl.includes('kw-blocked.html')) {
+                    chrome.tabs.getCurrent(t => { if (t) chrome.tabs.remove(t.id); });
+                    return;
+                }
+                
+                // Redirect to original URL
+                if ((!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) || originalUrl.startsWith('chrome-extension://')) {
+                    chrome.tabs.getCurrent(t => { if (t) chrome.tabs.remove(t.id); });
+                    return;
+                }
+                window.location.href = originalUrl;
+            });
         });
     });
 
     // Nah button - close tab
     document.getElementById('confirmNah').addEventListener('click', () => {
-        chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
+        if (currentTab) chrome.tabs.remove(currentTab.id);
     });
 });
 
 // Listen for storage changes to update button in real-time
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local' && changes.keywordBypass) {
+        if (!changes.keywordBypass.newValue) return;
         chrome.tabs.getCurrent((tab) => {
             if (tab) {
                 const bypass = changes.keywordBypass.newValue[tab.id] || {};
@@ -110,19 +137,39 @@ function updateBypassButton(bypass) {
     if (bypass.active && now < bypass.expiresAt) {
         // Bypass is active - show countdown
         const remaining = Math.ceil((bypass.expiresAt - now) / 1000);
-        btn.textContent = `Bypass Active (${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')})`;
+        btn.textContent = `[BYPASS ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}]`;
         btn.disabled = true;
         
         // Update countdown every second
-        setTimeout(() => updateBypassButton(bypass), 1000);
+        if (bypassTimeoutId !== null) clearTimeout(bypassTimeoutId);
+        bypassTimeoutId = setTimeout(() => {
+            chrome.tabs.getCurrent((tab) => {
+                if (tab) {
+                    chrome.storage.local.get({ keywordBypass: {} }, (data) => {
+                        const freshBypass = (data.keywordBypass || {})[tab.id] || {};
+                        updateBypassButton(freshBypass);
+                    });
+                }
+            });
+        }, 1000);
     } else if (bypass.cooldownUntil && now < bypass.cooldownUntil) {
         // Cooldown is active - show cooldown
         const remaining = Math.ceil((bypass.cooldownUntil - now) / 1000);
-        btn.textContent = `Cooldown (${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')})`;
+        btn.textContent = `[COOLDOWN ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}]`;
         btn.disabled = true;
         
         // Update countdown every second
-        setTimeout(() => updateBypassButton(bypass), 1000);
+        if (bypassTimeoutId !== null) clearTimeout(bypassTimeoutId);
+        bypassTimeoutId = setTimeout(() => {
+            chrome.tabs.getCurrent((tab) => {
+                if (tab) {
+                    chrome.storage.local.get({ keywordBypass: {} }, (data) => {
+                        const freshBypass = (data.keywordBypass || {})[tab.id] || {};
+                        updateBypassButton(freshBypass);
+                    });
+                }
+            });
+        }, 1000);
     } else {
         // No active bypass or cooldown
         btn.textContent = 'Unintentional?';

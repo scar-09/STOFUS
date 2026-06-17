@@ -10,39 +10,90 @@
 <body>
   <!-- Persistent header -->
   <div class="header">
-    <div class="header-brand-right">STOFUS</div>
+    <div class="header-controls">
+      <span class="header-dot dot-close"></span>
+      <span class="header-dot dot-minimize"></span>
+      <span class="header-dot dot-maximize"></span>
+    </div>
+    <div class="header-brand-right">
+      <span class="header-title">STOFUS</span>
+    </div>
+  </div>
+
+  <!-- Incognito Warning -->
+  <div id="incognitoWarning" style="display: none; background: #7f1d1d; color: #fca5a5; padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #991b1b; justify-content: space-between; align-items: center;">
+    <span>Incognito not protected</span>
+    <button id="openExtensionsBtn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Enable</button>
   </div>
 
   <!-- Section 1: URL Blocker -->
   <div class="accordion">
     <input type="checkbox" name="acc" id="acc1">
     <label for="acc1">
-      <span class="acc-label"><span class="acc-icon">🛡️</span> URL Blocker</span>
+      <span class="acc-label">URL BLOCKER</span>
     </label>
     <div class="content">
       <div class="input-group">
-        <label for="url">Website to block</label>
+        <label for="url">TARGET</label>
         <input type="text" id="url" placeholder="e.g. twitter.com" autocomplete="off" spellcheck="false">
         <span class="field-hint" id="urlError"></span>
       </div>
       <div class="input-group">
+        <label>MODE</label>
+        <div class="mode-switch">
+          <div class="mode-option">
+            <input type="radio" id="modeSchedule" name="blockMode" value="schedule" style="display: none;" checked>
+            <label for="modeSchedule">Schedule Block</label>
+          </div>
+          <div class="mode-option">
+            <input type="radio" id="modeTimer" name="blockMode" value="timer" style="display: none;">
+            <label for="modeTimer">Timer Block</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group" id="scheduleGroup">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label>SCHEDULE</label>
+          <div id="timeFormatToggle" style="border-radius: 50%; width: 18px; height: 18px; font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; user-select: none;" title="Toggle 12h/24h format">24</div>
+        </div>
+        <div class="duration-input-row" style="gap: 12px; margin-top: 4px;">
+          <div style="flex:1;">
+            <label>Start</label>
+            <div class="time-picker" id="startTimePicker">
+              <input type="text" id="startHour" class="time-select time-hour" value="09" maxlength="2" inputmode="numeric">
+              <span class="time-separator">:</span>
+              <input type="text" id="startMinute" class="time-select time-minute" value="00" maxlength="2" inputmode="numeric">
+              <button type="button" id="startMeridiem" class="meridiem-btn">AM</button>
+              <input type="hidden" id="startTime" value="09:00">
+            </div>
+          </div>
+          <div style="flex:1;">
+            <label>End</label>
+            <div class="time-picker" id="endTimePicker">
+              <input type="text" id="endHour" class="time-select time-hour" value="17" maxlength="2" inputmode="numeric">
+              <span class="time-separator">:</span>
+              <input type="text" id="endMinute" class="time-select time-minute" value="00" maxlength="2" inputmode="numeric">
+              <button type="button" id="endMeridiem" class="meridiem-btn">PM</button>
+              <input type="hidden" id="endTime" value="17:00">
+            </div>
+          </div>
+        </div>
+        <span class="field-hint" id="scheduleError"></span>
+      </div>
+
+      <div class="input-group" id="timerGroup" style="display: none;">
         <label for="timer">Duration</label>
         <div class="duration-input-row">
           <input type="text" id="timer" maxlength="3" value="30" autocomplete="off" spellcheck="false">
-          <select id="durationUnit" class="duration-unit">
-            <option value="minutes" selected>Minutes</option>
-            <option value="hours">Hours</option>
-            <option value="days">Days</option>
-          </select>
+          <button type="button" id="durationUnit" class="duration-unit">Minutes</button>
         </div>
-        <div class="duration-info">
-          <span class="scaling-notice">⚡ Unlock time scales with duration</span>
-        </div>
+
         <span class="field-hint" id="timerError"></span>
       </div>
       <div class="btn-row">
-        <button id="blockBtn" class="btn-primary">Block site</button>
-        <button id="undoBtn" class="btn-undo hidden" title="Undo last block">↩ Undo</button>
+        <button id="blockBtn" class="btn-primary">> BLOCK</button>
+        <button id="undoBtn" class="btn-undo hidden" title="Undo last block">> UNDO</button>
       </div>
     </div>
   </div>
@@ -51,14 +102,14 @@
   <div class="accordion">
     <input type="checkbox" name="acc" id="acc2">
     <label for="acc2">
-      <span class="acc-label"><span class="acc-icon">🔍</span> Content filter</span>
+      <span class="acc-label">CONTENT FILTER</span>
     </label>
     <div class="content">
       <div class="input-group">
         <label for="keyword">Block by keyword</label>
         <div class="keyword-input-row">
           <input type="text" id="keyword" placeholder="Enter keyword" autocomplete="off" spellcheck="false">
-          <button id="addKeywordBtn" class="btn-add">Add</button>
+          <button id="addKeywordBtn" class="btn-add">> ADD FILTER</button>
         </div>
         <span class="warning-label">Common words may block legitimate sites.</span>
         <span class="field-hint" id="keywordError"></span>
@@ -70,42 +121,54 @@
   <div class="accordion">
     <input type="checkbox" name="acc" id="acc3">
     <label for="acc3">
-      <span class="acc-label"><span class="acc-icon">📊</span> Status</span>
+      <span class="acc-label">STATUS</span>
     </label>
     <div class="content list-content">
-      <div class="dashboard-cards">
-        <div class="metric-card glass" id="cardSites">
-          <div class="metric-value" id="countSites">0</div>
-          <div class="metric-label">Active sites</div>
-        </div>
-        <div class="metric-card glass" id="cardKeywords">
-          <div class="metric-value" id="countKeywords">0</div>
-          <div class="metric-label">Active Keywords</div>
-        </div>
-      </div>
-      
-      <!-- Behavior Metrics -->
-      <div class="stats-row" style="display: flex; gap: 8px; margin-bottom: 10px; justify-content: center;">
-        <div class="stat-box glass">
-           <div class="stat-val" id="statAttemptsBlocked">0</div>
-           <div class="stat-lbl">Attempts Blocked</div>
-        </div>
-      </div>
-      <div class="collapsible-list" id="listSitesContainer">
-        <h4 class="sub-title">Blocked sites</h4>
-        <ul id="blockedList"></ul>
+      <!-- 1. Protection status -->
+      <div class="status-protection" id="protectionStatus">
+        <span class="status-dot" id="protectionDot"></span>
+        <span class="status-protection-text" id="protectionText">PROTECTION: ACTIVE</span>
       </div>
 
-      <div class="collapsible-list" id="listKeywordsContainer">
-        <h4 class="sub-title">Active keywords</h4>
-        <ul id="keywordList"></ul>
+      <!-- 2. Counts side by side -->
+      <div class="status-cards">
+        <div class="status-card" id="cardSitesToggle">
+          <span class="status-card-value" id="countSites">0</span>
+          <span class="status-card-label">sites blocked</span>
+        </div>
+        <div class="status-card" id="cardKeywordsToggle">
+          <span class="status-card-value" id="countKeywords">0</span>
+          <span class="status-card-label">keywords blocked</span>
+        </div>
+      </div>
+      <div class="status-list-wrap collapsible-list" id="listSitesWrap">
+        <ul id="listSites"></ul>
+      </div>
+      <div class="status-list-wrap collapsible-list" id="listKeywordsWrap">
+        <ul id="listKeywords"></ul>
+      </div>
+
+      <!-- 3. Next block ends in -->
+      <div class="status-next" id="nextExpiryRow" style="display:none;">
+        <span class="status-next-label">Next block ends in</span>
+        <span class="status-next-value" id="nextExpiryTime"></span>
+      </div>
+
+      <!-- 4. Patterns section -->
+      <div class="status-patterns">
+        <div class="patterns-header" id="patternsToggle">
+          <span class="patterns-arrow" id="patternsArrow">▶</span>
+          <span class="patterns-title">Attempts today</span>
+        </div>
+        <div class="patterns-body" id="patternsBody">
+          <ul id="patternsList"></ul>
+        </div>
       </div>
     </div>
   </div>
 
   <div id="status"></div>
 
-  <script src="bg-canvas.js" data-bg-mode="popup"></script>
   <script src="popup.js"></script>
 </body>
 
