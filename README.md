@@ -1,6 +1,6 @@
 # STOFUS 🛡️
 
-**STOFUS**
+STOFUS  
 A browser extension that adds friction between you and the sites you're trying to avoid.
 
 STOFUS works on Chromium-based browsers — Chrome, Brave, Edge, and others.
@@ -18,8 +18,8 @@ STOFUS works on Chromium-based browsers — Chrome, Brave, Edge, and others.
 
 ## What it doesn't do
 
-STOFUS doesn't block other browsers on your device. It doesn't block your phone. It can't prevent you from disabling or uninstalling it.
-If you're determined to get through, you will get through. STOFUS isn't a lock. It's the pause between impulse and action — long enough that you might change your mind.
+STOFUS doesn't block other browsers on your device. It doesn't block your phone. It can't prevent you from disabling or uninstalling it.  
+If you're determined to get through, you will get through. STOFUS isn't a lock. It's the pause between impulse and action - long enough that you might change your mind.  
 It works best for people who already want to stop but struggle with the moment of weakness. If you're not there yet, no tool will get you there.
 
 ---
@@ -32,15 +32,15 @@ Everything stays local. No accounts, no servers, no tracking.
 
 ## Installation
 
-Clone or download this repository
-Go to chrome://extensions in your browser
-Enable Developer Mode
-Click Load unpacked and select the STOFUS folder
-Pin it and configure your blocks
+1. Clone or download this repository
+2. Go to `chrome://extensions` in your browser
+3. Enable Developer Mode
+4. Click Load unpacked and select the STOFUS folder
+5. Pin it and configure your blocks
 
 ### Enable incognito protection
 
-STOFUS doesn't run in incognito by default. To fix this, go to chrome://extensions, find STOFUS, and enable "Allow in Incognito."
+STOFUS doesn't run in incognito by default. To fix this, go to `chrome://extensions`, find STOFUS, and enable "Allow in Incognito."
 
 ---
 
