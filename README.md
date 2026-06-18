@@ -1,7 +1,6 @@
-# STOFUS 🛡️
+# STOFUS 
 
-STOFUS  
-A browser extension that adds friction between you and the sites you're trying to avoid. It works on Chromium-based browsers — Chrome, Brave, Edge, and others.
+A browser extension that adds friction between you and the sites you're trying to avoid. It works on Chromium-based browsers - Chrome, Brave, Edge, and others.
 
 ---
 
