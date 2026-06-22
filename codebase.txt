@@ -1,7 +1,7 @@
 Stofus — Codebase Reference
 ============================
 
-Last updated: 2026-06-17
+Last updated: 2026-06-22
 
 This document serves as both a project structure reference and a living
 audit of bugs, dead code, contradictions, and design decisions.
@@ -431,7 +431,7 @@ welcome.html       38  │ Welcome page markup
 blocked.html       26  │ Block page markup
 manifest.json      62  │ Extension manifest
 welcome.js          3  │ Welcome page script
-README.md          39  │ Project documentation
+README.md          49  │ Project documentation
 codebase.txt       ~   │ This file
 ───────────────────────┴─────────────────────────────────────────────────
 
