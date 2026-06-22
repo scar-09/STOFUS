@@ -4,6 +4,16 @@ A browser extension that adds friction between you and the sites you're trying t
 
 ---
 
+## Preview
+
+<p align="center">
+  <img src="screenshots/1.png" width="30%" alt="STOFUS Screenshot 1" />
+  <img src="screenshots/2.png" width="30%" alt="STOFUS Screenshot 2" /> 
+  <img src="screenshots/3.png" width="30%" alt="STOFUS Screenshot 3" />
+</p>
+
+---
+
 ## What it does
 
 - **Schedule Block**: blocks a site during a recurring daily time window. Repeats every day until you remove it. No bypass during the blocked period.
